@@ -15,9 +15,9 @@
 <script type="text/javascript">
 
 var config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    type: Phaser.AUTO, // es el contexto de renderizado que se quiere usar para el juego
+    width: 800, // ancho del juego
+    height: 600, // alto del juego
     physics: {
         default: 'arcade',
         arcade: {
@@ -41,24 +41,28 @@ var score = 0;
 var gameOver = false;
 var scoreText;
 
-var game = new Phaser.Game(config);
+var game = new Phaser.Game(config); // se crea el juego
 
 function preload ()
 {
-    this.load.image('sky', 'assets/sky.png');
-    this.load.image('ground', 'assets/platform.png');
-    this.load.image('star', 'assets/star.png');
-    this.load.image('bomb', 'assets/bomb.png');
-    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.image('sky', 'assets/sky.png'); // se carga la imagen de fondo
+    this.load.image('ground', 'assets/platform.png'); // se carga la imagen de la plataforma
+    this.load.image('star', 'assets/star.png'); // se carga la imagen de la estrella
+    this.load.image('bomb', 'assets/bomb.png'); // se carga la imagen de la bomba
+    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 }); // se carga la imagen del jugador (dude) con sus respectivos frames (ancho y alto)
 }
 
 function create ()
 {
+    /*NOTA IMPORTANTE: El orden en el que se exhiben los objetos de 
+    juego coincide con el orden en el que los creas.*/
+    
     //  A simple background for our game
-    this.add.image(400, 300, 'sky');
+    this.add.image(400, 300, 'sky'); // se añade la imagen de fondo en la posición (400, 300) del canvas,  los 
+    //objetos de juego están posicionados en función de su centro por defecto
 
     //  The platforms group contains the ground and the 2 ledges we can jump on
-    platforms = this.physics.add.staticGroup();
+    platforms = this.physics.add.staticGroup(); // se crea un grupo de objetos estáticos (no se mueven)
 
     //  Here we create the ground.
     //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
