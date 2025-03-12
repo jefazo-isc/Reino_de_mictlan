@@ -1,211 +1,26 @@
-<!doctype html> 
-<html lang="en"> 
-<head> 
-    <meta charset="UTF-8" />
-    <title>Making your first Phaser 3 Game - Part 10</title>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reino de Mictlán</title>
     <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
-    <style type="text/css">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+ <style type="text/css">
         body {
             margin: 0;
         }
     </style>
+
 </head>
 <body>
-
-<script type="text/javascript">
-
-var config = {
-    type: Phaser.AUTO, // es el contexto de renderizado que se quiere usar para el juego
-    width: 800, // ancho del juego
-    height: 600, // alto del juego
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 300 },
-            debug: false
-        }
-    },
-    scene: {
-        preload: preload,
-        create: create,
-        update: update
-    }
-};
-
-var player;
-var stars;
-var bombs;
-var platforms;
-var cursors;
-var score = 0;
-var gameOver = false;
-var scoreText;
-
-var game = new Phaser.Game(config); // se crea el juego
-
-function preload ()
-{
-    this.load.image('sky', 'assets/sky.png'); // se carga la imagen de fondo
-    this.load.image('ground', 'assets/platform.png'); // se carga la imagen de la plataforma
-    this.load.image('star', 'assets/star.png'); // se carga la imagen de la estrella
-    this.load.image('bomb', 'assets/bomb.png'); // se carga la imagen de la bomba
-    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 }); // se carga la imagen del jugador (dude) con sus respectivos frames (ancho y alto)
-}
-
-function create ()
-{
-    /*NOTA IMPORTANTE: El orden en el que se exhiben los objetos de 
-    juego coincide con el orden en el que los creas.*/
+    <div id="game-container"></div>
     
-    //  A simple background for our game
-    this.add.image(400, 300, 'sky'); // se añade la imagen de fondo en la posición (400, 300) del canvas,  los 
-    //objetos de juego están posicionados en función de su centro por defecto
-
-    //  The platforms group contains the ground and the 2 ledges we can jump on
-    platforms = this.physics.add.staticGroup(); // se crea un grupo de objetos estáticos (no se mueven)
-
-    //  Here we create the ground.
-    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    platforms.create(400, 568, 'ground').setScale(2).refreshBody();
-
-    //  Now let's create some ledges
-    platforms.create(600, 400, 'ground'); // se crea una plataforma en la posición (600, 400)
-    platforms.create(50, 250, 'ground');    // se crea una plataforma en la posición (50, 250)
-    platforms.create(750, 220, 'ground');  // se crea una plataforma en la posición (750, 220)
-
-    // The player and its settings
-    player = this.physics.add.sprite(100, 450, 'dude'); // se crea el jugador en la posición (100, 450)
-
-    //  Player physics properties. Give the little guy a slight bounce.
-    player.setBounce(0.2); // se le da un rebote al jugador
-    player.setCollideWorldBounds(true); // se establece que el jugador colisione con los límites del mundo
-
-    //  Our player animations, turning, walking left and walking right.
-    this.anims.create({     // se crea una animación para el jugador
-        key: 'left', 
-        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
-        frameRate: 10,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'turn',
-        frames: [ { key: 'dude', frame: 4 } ],
-        frameRate: 20
-    });
-
-    this.anims.create({
-        key: 'right',
-        frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
-        frameRate: 10,
-        repeat: -1
-    });
-
-    //  Input Events
-    cursors = this.input.keyboard.createCursorKeys(); // se crean los eventos de teclado
-
-    //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
-    stars = this.physics.add.group({ // se crea un grupo de estrellas
-        key: 'star',
-        repeat: 11,
-        setXY: { x: 12, y: 0, stepX: 70 } // se establece la posición de las estrellas
-    });
-
-    stars.children.iterate(function (child) { // se recorren las estrellas
-
-        //  Give each star a slightly different bounce
-        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8)); // se le da un rebote a cada estrella
-
-    });
-
-    bombs = this.physics.add.group(); // se crea un grupo de bombas 
-
-    //  The score
-    scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' }); // se crea el texto del score
-
-    //  Collide the player and the stars with the platforms
-    this.physics.add.collider(player, platforms); // se establece la colisión entre el jugador y las plataformas
-    this.physics.add.collider(stars, platforms);// se establece la colisión entre las estrellas y las plataformas
-    this.physics.add.collider(bombs, platforms); // se establece la colisión entre las bombas y las plataformas
-
-    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-    this.physics.add.overlap(player, stars, collectStar, null, this); // se establece la superposición entre el jugador y las estrellas
-
-    this.physics.add.collider(player, bombs, hitBomb, null, this); // se establece la colisión entre el jugador y las bombas
-}
-
-function update ()
-{
-    if (gameOver) // si el juego ha terminado
-    {
-        return; // se retorna  y no se ejecuta el código restante
-    }
-
-    if (cursors.left.isDown) // si se presiona la tecla de flecha izquierda
-    {
-        player.setVelocityX(-160);
-
-        player.anims.play('left', true);
-    }
-    else if (cursors.right.isDown) // si se presiona la tecla de flecha derecha
-    {
-        player.setVelocityX(160);
-
-        player.anims.play('right', true);
-    }
-    else // si no se presiona ninguna tecla
-    {
-        player.setVelocityX(0);
-
-        player.anims.play('turn');
-    }
-    // si se presiona la tecla de flecha arriba y el jugador está tocando el suelo
-    if (cursors.up.isDown && player.body.touching.down)
-    {
-        player.setVelocityY(-330);
-    }
-}
-
-function collectStar (player, star) // función que se ejecuta cuando el jugador recoge una estrella
-{
-    star.disableBody(true, true); // se deshabilita la estrella
-
-    //  Add and update the score
-    score += 10; // se incrementa el score en 10
-    scoreText.setText('Score: ' + score); // se actualiza el texto del score
-
-    if (stars.countActive(true) === 0) // si no hay estrellas activas
-    {
-        //  A new batch of stars to collect
-        stars.children.iterate(function (child) { // se recorren las estrellas
-
-            child.enableBody(true, child.x, 0, true, true); // se habilita la estrella
-
-        }); // se repite el proceso
-
-        var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400); // se establece la posición de la bomba
-
-        var bomb = bombs.create(x, 16, 'bomb'); // se crea la bomba en la posición (x, 16)
-        bomb.setBounce(1); // se le da un rebote a la bomba
-        bomb.setCollideWorldBounds(true); // se establece que la bomba colision
-        bomb.setVelocity(Phaser.Math.Between(-200, 200), 20); // se establece la velocidad de la bomba
-        bomb.allowGravity = false; // se establece que la bomba no tenga gravedad
-
-    }
-}
-
-function hitBomb (player, bomb) // función que se ejecuta cuando el jugador toca una bomba
-{
-    this.physics.pause(); // se pausa la física del juego
-
-    player.setTint(0xff0000); // se cambia el color del jugador a rojo
-
-    player.anims.play('turn'); // se reproduce la animación de girar
-
-    gameOver = true; // se establece que el juego ha terminado
-}
-
-</script>
-
+    <!-- Escenas -->
+    <script src="js/MainMenu.js"></script>
+    <script src="js/Level1.js"></script>
+    <script src="js/Level2.js"></script>
+    <script src="js/FinalLevel.js"></script>
+    
+    <!-- Configuración inicial -->
+    <script src="js/config.js"></script>
 </body>
 </html>
