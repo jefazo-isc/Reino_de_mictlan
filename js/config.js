@@ -18,7 +18,7 @@ const config = {
         default: 'arcade',
         arcade: { gravity: { y: 300 }, debug: false }
     },
-    scene: [MainMenu,Usuario,Records, Level1, Level2, FinalLevel],
+    scene: [MainMenu,Usuario,Records, Creditos, Level1, Level2, FinalLevel],
 };
 
 const game = new Phaser.Game(config);

@@ -47,7 +47,7 @@ class MainMenu extends Phaser.Scene {
         })
         .setInteractive()
         .on('pointerdown', () => {
-            this.scene.start('Instructions', globalData);
+            window.location.href = '../extra/instrucciones.html';
         });
 
         const creditosButton = this.add.text(300, 500, 'CRÉDITOS', {
@@ -58,7 +58,7 @@ class MainMenu extends Phaser.Scene {
         })
         .setInteractive()
         .on('pointerdown', () => {
-            this.scene.start('Credits', globalData);
+            this.scene.start('Creditos', globalData);
         });
         
 
