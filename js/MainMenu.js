@@ -8,7 +8,7 @@ class MainMenu extends Phaser.Scene {
         this.add.image(400, 300, 'sky');
         
         // Título
-        const title = this.add.text(250, 200, 'REINO DE MICTLÁN', {
+        const title = this.add.text(225, -200, 'REINO DE MICTLÁN', {
             fontSize: '40px',
             fill: '#FF0000',
             fontFamily: 'Arial',
@@ -17,15 +17,54 @@ class MainMenu extends Phaser.Scene {
         });
         
         // Botón de inicio
-        const startButton = this.add.text(350, 300, 'INICIAR VIAJE', {
+        const startButton = this.add.text(300, 200, 'INICIAR VIAJE', {
             fontSize: '24px',
-            fill: '#FFFFFF',
-            backgroundColor: '#333333',
-            padding: { x: 20, y: 10 }
+            fill: '#fff',
+            backgroundColor: '#1657a1',
+            padding: { left: 5, right: 5, top: -135, bottom: -60 }
         })
         .setInteractive()
         .on('pointerdown', () => {
-            this.scene.start('Level1', globalData);
+            this.scene.start('Usuario', globalData);
         });
+
+        const recordsButton = this.add.text(300, 300, 'VER PUNTAJES', {
+            fontSize: '24px',
+            fill: '#fff',
+            backgroundColor: '#1657a1',
+            padding: { left: 5, right: 5, top: -135, bottom: -60 }
+        })
+        .setInteractive()
+        .on('pointerdown', () => {
+            this.scene.start('Records', globalData);
+        });
+
+        const instruccionesButton = this.add.text(300, 400, 'INSTRUCCIONES', {
+            fontSize: '24px',
+            fill: '#fff',
+            backgroundColor: '#1657a1',
+            padding: { left: 5, right: 5, top: -135, bottom: -60 }
+        })
+        .setInteractive()
+        .on('pointerdown', () => {
+            this.scene.start('Instructions', globalData);
+        });
+
+        const creditosButton = this.add.text(300, 500, 'CRÉDITOS', {
+            fontSize: '24px',
+            fill: '#fff',
+            backgroundColor: '#1657a1',
+            padding: { left: 5, right: 5, top: -135, bottom: -60 }
+        })
+        .setInteractive()
+        .on('pointerdown', () => {
+            this.scene.start('Credits', globalData);
+        });
+        
+
+    }
+    
+    preload() {
+        this.load.image('sky', '../assets/sky.png');
     }
 }
