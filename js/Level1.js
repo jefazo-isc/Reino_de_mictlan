@@ -3,24 +3,33 @@ class Level1 extends Phaser.Scene {
         super({ key: 'Level1' });
     }
 
-    // Variables de la escena
     preload() {
-        this.load.image('sky', 'assets/sky.png');
-        this.load.image('ground', 'assets/platform.png');
+        this.load.image('sky', 'assets/sky.webp');
+        this.load.image('ground', 'assets/piso.png');
+        this.load.image('ground2', 'assets/platform.png');
         this.load.image('star', 'assets/star.png');
         this.load.image('bomb', 'assets/bomb.png');
-        this.load.spritesheet('dude', 'assets/dude.png', { 
-            frameWidth: 32, 
-            frameHeight: 48 
-        });
+
+        // Cargar sprites de caminar
+        for (let i = 0; i <= 25; i++) {
+            this.load.image(`sprite${i}`, `assets/sprites/sprite (${i}).png`);
+        }
+
+        // Cargar sprites de salto hacia la derecha
+        for (let i = 0; i <= 12; i++) {
+            this.load.image(`jump_i${i}`, `assets/jump/jump_i (${i}).png`);
+        }
+
+        // Cargar sprites de salto hacia la izquierda
+        for (let i = 0; i <= 12; i++) {
+            this.load.image(`jump_D${i}`, `assets/jump/jump_D (${i}).png`);
+        }
     }
 
     create() {
-        // Inicializar variables
         this.score = 0;
         this.gameOver = false;
-        
-        // Configurar mundo del juego
+
         this.add.image(400, 300, 'sky');
         this.setupPlatforms();
         this.setupPlayer();
@@ -32,40 +41,23 @@ class Level1 extends Phaser.Scene {
 
     setupPlatforms() {
         this.platforms = this.physics.add.staticGroup();
-        this.platforms.create(400, 568, 'ground').setScale(2).refreshBody();
-        this.platforms.create(600, 400, 'ground');
-        this.platforms.create(50, 250, 'ground');
-        this.platforms.create(750, 220, 'ground');
+        this.platforms.create(400, 595, 'ground').setScale(1).refreshBody();
+        this.platforms.create(720, 500, 'ground2');
+        this.platforms.create(8, 380, 'ground2');
+        this.platforms.create(720, 380, 'ground2');
+        this.platforms.create(73, 500, 'ground2');
     }
 
     setupPlayer() {
-        this.player = this.physics.add.sprite(100, 450, 'dude');
+        this.player = this.physics.add.sprite(100, 450, 'sprite0');
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
 
-        // Animaciones
-        this.anims.create({
-            key: 'left',
-            frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'turn',
-            frames: [{ key: 'dude', frame: 4 }],
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'right',
-            frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        // Controles
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        this.currentFrame = 0; // Control para caminar
+        this.jumpFrame = 0; // Control para salto
+        this.frameDelay = 0; // Manejo de velocidad de animación
     }
 
     setupStars() {
@@ -102,21 +94,55 @@ class Level1 extends Phaser.Scene {
     update() {
         if (this.gameOver) return;
 
-        // Movimiento del jugador
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-160);
-            this.player.anims.play('left', true);
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(160);
-            this.player.anims.play('right', true);
-        } else {
-            this.player.setVelocityX(0);
-            this.player.anims.play('turn');
-        }
+        let isJumping = this.cursors.up.isDown && this.player.body.touching.down;
+        let isMovingRight = this.cursors.right.isDown;
+        let isMovingLeft = this.cursors.left.isDown;
 
-        if (this.cursors.up.isDown && this.player.body.touching.down) {
+        if (isJumping) {
             this.player.setVelocityY(-330);
         }
+
+        if (isJumping && isMovingRight) {
+            this.animateJump("jump_i", 0, 12);
+        } else if (isJumping && isMovingLeft) {
+            this.animateJump("jump_D", 0, 12);
+        } else if (isMovingLeft) {
+            this.player.setVelocityX(-160);
+            this.animateWalk(0, 12);
+        } else if (isMovingRight) {
+            this.player.setVelocityX(160);
+            this.animateWalk(16, 25);
+        } else {
+            this.player.setVelocityX(0);
+            this.player.setTexture('sprite12'); // Imagen de "quieto"
+        }
+    }
+
+    animateWalk(start, end) {
+        if (this.frameDelay % 3 === 0) { // Controla la velocidad de la animación
+            this.currentFrame++;
+            if (this.currentFrame > end) this.currentFrame = start;
+            this.player.setTexture(`sprite${this.currentFrame}`);
+        }
+        this.frameDelay++;
+    }
+
+    animateJump(prefix, start, end) {
+        if (this.frameDelay % 5 === 0) { // Controla la velocidad del cambio de imágenes al saltar
+            if (prefix === "jump_D") {
+                this.jumpFrame--;
+                if (this.jumpFrame < start) {
+                    this.jumpFrame = end;
+                }
+            } else if (prefix === "jump_i") {
+                this.jumpFrame++;
+                if (this.jumpFrame > end) {
+                    this.jumpFrame = start;
+                }
+            }
+            this.player.setTexture(`${prefix}${this.jumpFrame}`);
+        }
+        this.frameDelay++;
     }
 
     collectStar(player, star) {
@@ -144,7 +170,6 @@ class Level1 extends Phaser.Scene {
     hitBomb(player, bomb) {
         this.physics.pause();
         player.setTint(0xff0000);
-        player.anims.play('turn');
         this.gameOver = true;
     }
 }
