@@ -61,8 +61,11 @@ class Usuario extends Phaser.Scene {
             if (aliasRegex.test(aliasString)) {
                 // Revisa si ya existe en localStorage
                 if (!localStorage.getItem(aliasString)) {
-                    // Si no existe, se da de alta
-                    localStorage.setItem(aliasString, JSON.stringify({ score: 0 }));
+                    // Si no existe, se da de alta, guardando score y fecha actual
+                    localStorage.setItem(aliasString, JSON.stringify({ 
+                        score: 0,
+                        registrado: new Date().toISOString().slice(0, 10)
+                    }));
                     aliasLabel.setText('Alias registrado: ' + aliasString);
 
                     // Asigna alias y score a la variable global
