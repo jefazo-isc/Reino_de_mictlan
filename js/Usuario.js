@@ -14,7 +14,7 @@ class Usuario extends Phaser.Scene {
         let aliasString = '';
 
         //titulo
-        const title = this.add.text(225, -200, 'REINO DE MICTLÁN', {
+        const title = this.add.text(225, 50, 'REINO DE MICTLÁN', {
             fontSize: '40px',
             fill: '#FF0000',
             fontFamily: 'Arial',
@@ -50,7 +50,7 @@ class Usuario extends Phaser.Scene {
             fontSize: '24px',
             fill: '#fff',
             backgroundColor: '#1657a1',
-            padding: { left: 5, right: 5, top: -135, bottom: -60 }
+            padding: { left: 5, right: 5, top: 5, bottom: 5 }
         })
         .setInteractive()
         .on('pointerdown', () => {
