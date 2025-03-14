@@ -4,7 +4,7 @@ class Usuario extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('sky', '../assets/sky.png');
+        this.load.image('sky', '../assets/sky.webp');
     }
 
     create() {
@@ -14,24 +14,32 @@ class Usuario extends Phaser.Scene {
         let aliasString = '';
 
         //titulo
-        const title = this.add.text(225, 50, 'REINO DE MICTLÁN', {
-            fontSize: '40px',
-            fill: '#FF0000',
-            fontFamily: 'Arial',
-            stroke: '#000000',
-            strokeThickness: 5
+        const title = this.add.text(125, 50, 'REINO DE MICTLÁN', {
+            fontSize: '60px',
+            fill: '#d97f29',
+            fontFamily: 'Viva_Mexico_cabrones',
+            strokeThickness: 5,
+            stroke: '#661b06'
         });
         
         // Texto inicial
-        const aliasLabel = this.add.text(200, 150, 'Ingresa tu alias: ', {
-            fontSize: '24px',
-            fill: '#fff'
+        const aliasLabel = this.add.text(250, 150, 'Ingresa tu alias', {
+            fontSize: '42px',
+            padding: { left: 5, right: 5, top: 5, bottom: 5 },
+            fontFamily: 'Mayan',
+            fill: '#d97f29',
+            strokeThickness: 3,
+            stroke: '#661b06'
         });
         
         // Muestra lo que va escribiendo el usuario
-        const aliasText = this.add.text(200, 200, '', {
-            fontSize: '24px',
-            fill: '#fff'
+        const aliasText = this.add.text(300, 320, '', {
+            fontSize: '40px',
+            padding: { left: 5, right: 5, top: 5, bottom: 5 },
+            fontFamily: 'Mayan',
+            fill: '#d97f29',
+            strokeThickness: 3,
+            stroke: '#661b06'
         });
         
         // Captura teclas
@@ -46,22 +54,24 @@ class Usuario extends Phaser.Scene {
         });
         
         // Botón para guardar e ir a Level1
-        const startButton = this.add.text(200, 450, 'INICIAR VIAJE', {
-            fontSize: '24px',
-            fill: '#fff',
-            backgroundColor: '#1657a1',
-            padding: { left: 5, right: 5, top: 5, bottom: 5 }
+        const startButton = this.add.text(300, 450, 'COMENZAR', {
+            fontSize: '30px',
+            padding: { left: 5, right: 5, top: 5, bottom: 5 },
+            fontFamily: 'Mayan',
+            fill: '#d97f29',
+            strokeThickness: 5,
+            stroke: '#661b06', 
         })
         .setInteractive()
         .on('pointerdown', () => {
-            // Expresión regular para alias: 4-8 caracteres, letras, dígitos o _
+            // Los caracteres permitidos
             const aliasRegex = /^[A-Za-z0-9_]{4,8}$/;
             
-            // Verifica que cumpla con el formato
+            // verificamos que cumpla con el formato
             if (aliasRegex.test(aliasString)) {
-                // Revisa si ya existe en localStorage
+                // se revisa si ya existe en localStorage
                 if (!localStorage.getItem(aliasString)) {
-                    // Si no existe, se da de alta, guardando score y fecha actual
+                    // Si no existe, se da de alta, con el  score y fecha
                     localStorage.setItem(aliasString, JSON.stringify({ 
                         score: 0,
                         registrado: new Date().toISOString().slice(0, 10)
@@ -80,10 +90,63 @@ class Usuario extends Phaser.Scene {
             } else {
                 Swal.fire({
                   icon: 'error',
-                  title: 'Oops...',
-                  text: 'Alias inválido (4-8, letras, dígitos o "_" )'
+                  title: 'Algo anda mal...',
+                  text: 'Alias inválido (4-8, letras, dígitos o "_" )',
+                  customClass: {
+                    title: 'swal2-title',
+                    content: 'swal2-content',
+                    htmlContainer: 'swal2-html-container'
+                }
                 });
             }
+            
+        });
+
+        const volverButton = this.add.text(640, 520, 'VOLVER', {
+            fontSize: '30px',
+            padding: { left: 5, right: 5, top: 5, bottom: 5 },
+            fontFamily: 'Mayan',
+            fill: '#fbc54e',
+            strokeThickness: 6,
+            stroke: '#1d0010'
+        })
+        .setInteractive()
+        .on('pointerdown', () => {
+            this.scene.start('MainMenu', globalData);
+        })
+        .on('pointerover', () => {
+            this.tweens.add({
+                targets: volverButton,
+                alpha: 0,
+                duration: 500,
+                ease: 'Linear',
+                yoyo: true,
+                repeat: -1
+            });
+            this.tweens.killTweensOf(startButton);
+            startButton.alpha = 1;
+        })
+        .on('pointerout', () => {
+            this.tweens.killTweensOf(volverButton);
+            volverButton.alpha = 1;
+            this.tweens.add({
+                targets: startButton,
+                alpha: 0,
+                duration: 800,
+                ease: 'Linear',
+                yoyo: true,
+                repeat: -1
+            });
+        });
+
+        // animaciones
+        this.tweens.add({
+            targets: startButton,
+            alpha: 0,
+            duration: 800,
+            ease: 'Linear',
+            yoyo: true,
+            repeat: -1
         });
     }
 };

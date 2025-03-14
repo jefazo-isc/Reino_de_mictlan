@@ -4,62 +4,133 @@ class MainMenu extends Phaser.Scene {
     }
 
     create() {
-        // Fondo
+
         this.add.image(400, 300, 'sky');
         
-        // Título
-        const title = this.add.text(215, 50, 'REINO DE MICTLÁN', {
-            fontSize: '40px',
-            fill: '#FF0000',
-            fontFamily: 'Arial',
-            stroke: '#000000',
-            strokeThickness: 5
+
+        const title = this.add.text(125, 50, 'REINO DE MICTLÁN', {
+            fontSize: '60px',
+            fill: '#d97f29',
+            fontFamily: 'Viva_Mexico_cabrones',
+            strokeThickness: 5,
+            stroke: '#661b06'
         });
         
         // Botón de inicio
-        const startButton = this.add.text(300, 200, 'INICIAR VIAJE', {
-            fontSize: '24px',
-            fill: '#fff',
-            backgroundColor: '#1657a1',
-            padding: { left: 5, right: 5, top: 5, bottom: 5 }
+        const startButton = this.add.text(275, 200, 'INICIAR VIAJE', {
+            fontSize: '32px',
+            //backgroundColor: '#1657a1',
+            padding: { left: 5, right: 5, top: 5, bottom: 5 },
+            fontFamily: 'Mayan',
+            fill: '#d97f29',
+            strokeThickness: 5,
+            stroke: '#661b06'
+            
         })
         .setInteractive()
         .on('pointerdown', () => {
             this.scene.start('Usuario', globalData);
+        })
+        .on('pointerover', () => {
+            this.tweens.add({
+                targets: startButton,
+                alpha: 0,
+                duration: 500,
+                ease: 'Linear',
+                yoyo: true,
+                repeat: -1
+            });
+        })
+        .on('pointerout', () => {
+            this.tweens.killTweensOf(startButton);
+            startButton.alpha = 1;
         });
 
-        const recordsButton = this.add.text(300, 300, 'VER PUNTAJES', {
-            fontSize: '24px',
+        const recordsButton = this.add.text(278, 300, 'VER PUNTAJES', {
+            fontSize: '32px',
             fill: '#fff',
-            backgroundColor: '#1657a1',
-            padding: { left: 5, right: 5, top: 5, bottom: 5 }
+            padding: { left: 5, right: 5, top: 5, bottom: 5 },
+            fontFamily: 'Mayan',
+            fill: '#d97f29',
+            strokeThickness: 5,
+            stroke: '#661b06'
         })
         .setInteractive()
         .on('pointerdown', () => {
             this.scene.start('Records', globalData);
+        })
+        .on('pointerover', () => {
+            this.tweens.add({
+                targets: recordsButton,
+                alpha: 0,
+                duration: 500,
+                ease: 'Linear',
+                yoyo: true,
+                repeat: -1
+            });
+        })
+        .on('pointerout', () => {
+            this.tweens.killTweensOf(recordsButton);
+            recordsButton.alpha = 1;
         });
 
-        const instruccionesButton = this.add.text(300, 400, 'INSTRUCCIONES', {
-            fontSize: '24px',
+        const instruccionesButton = this.add.text(265, 400, 'INSTRUCCIONES', {
+            fontSize: '32px',
             fill: '#fff',
-            backgroundColor: '#1657a1',
-            padding: { left: 5, right: 5, top: 5, bottom: 5 }
+            padding: { left: 5, right: 5, top: 5, bottom: 5 },
+            fontFamily: 'Mayan',
+            fill: '#d97f29',
+            strokeThickness: 5,
+            stroke: '#661b06'
         })
         .setInteractive()
         .on('pointerdown', () => {
             window.location.href = '../extra/instrucciones.html';
+        })
+        .on('pointerover', () => {
+            this.tweens.add({
+                targets: instruccionesButton,
+                alpha: 0,
+                duration: 500,
+                ease: 'Linear',
+                yoyo: true,
+                repeat: -1
+            });
+        })
+        .on('pointerout', () => {
+            this.tweens.killTweensOf(instruccionesButton);
+            instruccionesButton.alpha = 1;
         });
 
-        const creditosButton = this.add.text(300, 500, 'CRÉDITOS', {
-            fontSize: '24px',
+        const creditosButton = this.add.text(310, 500, 'CRÉDITOS', {
+            fontSize: '32px',
             fill: '#fff',
-            backgroundColor: '#1657a1',
-            padding: { left: 5, right: 5, top: 5, bottom: 5 }
+            padding: { left: 5, right: 5, top: 5, bottom: 5 },
+            fontFamily: 'Mayan',
+            fill: '#d97f29',
+            strokeThickness: 5,
+            stroke: '#661b06'
         })
         .setInteractive()
         .on('pointerdown', () => {
             this.scene.start('Creditos', globalData);
+        })
+        .on('pointerover', () => {
+            this.tweens.add({
+                targets: creditosButton,
+                alpha: 0,
+                duration: 500,
+                ease: 'Linear',
+                yoyo: true,
+                repeat: -1
+            });
+        })
+        .on('pointerout', () => {
+            this.tweens.killTweensOf(creditosButton);
+            creditosButton.alpha = 1;
         });
+
+        
         
 
     }

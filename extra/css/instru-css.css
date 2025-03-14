@@ -14,5 +14,6 @@ body{
     justify-content: center;
     align-items: center;
     border: 1px solid black;
-    background: url(../../assets/sky.png)
+    background: url(../../assets/sky.webp);
+    background-color: #c0a13a00;
 }

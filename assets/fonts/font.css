@@ -1,0 +1,20 @@
+@font-face {
+    font-family: 'Viva_Mexico_cabrones';
+    src: url('Viva_Mexico_cabrones.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'Mayan';
+    src: url('Mayan.ttf') format('truetype');
+}
+body {
+    font-family: 'Viva_Mexico_cabrones', Arial, sans-serif;
+}
+.swal2-title{
+    font-family: 'Mayan', Arial, sans-serif;
+}
+.swal2-title, .swal2-content {
+    font-family: 'Mayan', Arial, sans-serif;
+}
+.swal2-html-container {
+    font-family: 'Mayan', Arial, sans-serif;
+}

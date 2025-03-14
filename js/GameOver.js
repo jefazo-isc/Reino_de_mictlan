@@ -10,7 +10,7 @@ class GameOver extends Phaser.Scene {
     create() {
         this.add.image(400, 300, 'sky');
         
-        // Título
+
         const title = this.add.text(215, 50, '¡GAME OVER!', {
             fontSize: '40px',
             fill: '#FF0000',
