@@ -25,7 +25,7 @@ class Presentacion extends Phaser.Scene {
         });
 
         this.input.keyboard.on('keydown', () => {
-            this.scene.start('MainMenu');
+            this.scene.start('MainMenu'); //MainMenu
         });
 
         this.tweens.add({

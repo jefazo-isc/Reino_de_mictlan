@@ -44,7 +44,7 @@ class Usuario extends Phaser.Scene {
         
         // Captura teclas
         this.input.keyboard.on('keydown', (event) => {
-            //console.log(event.key, event.code);
+            console.log(event.key, event.code);
 
             const ignoreKeys = new Set([
                 ' ', 'Enter', 'Shift', 'Control', 'Alt',
@@ -52,7 +52,7 @@ class Usuario extends Phaser.Scene {
                 'End', 'PageDown', 'ArrowLeft', 'ArrowUp', 'Pause',
                 'ArrowRight', 'ArrowDown',
                 'F1', 'F2', 'F3', 'F4', 'F5', 'F6',
-                'F7', 'F8', 'F9', 'F10', 'F11', 'F12'
+                'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
             ]);
 
             if (event.key === 'Backspace' && aliasString.length > 0) {
@@ -95,7 +95,9 @@ class Usuario extends Phaser.Scene {
                 } else {
                     globalData.alias = aliasString;
                     globalData.score = 0;
-                    this.scene.start('Historia1', globalData);
+                    globalData.lives = 3;
+                    globalData.currentLevel = 1;
+                    this.scene.start('Historia1', globalData); //Historia1
                 }
             } else {
                 Swal.fire({
@@ -160,13 +162,3 @@ class Usuario extends Phaser.Scene {
         });
     }
 };
-
-/*this.input.keyboard.on('keydown', (event) => {
-            // Acepta solo caracteres visibles y sin el espacio
-            if (event.key.length === 1 && event.key !== ' ') {
-                aliasString += event.key;
-            } else if (event.key === 'Backspace' && aliasString.length > 0) {
-                aliasString = aliasString.slice(0, -1);
-            }
-            aliasText.setText(aliasString);
-        });*/
