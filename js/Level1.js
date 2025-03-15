@@ -4,7 +4,7 @@ class Level1 extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('vidas', 'assets/vidas.png'); // Ajusta la ruta si es necesario
+        this.load.image('vidas', 'assets/vidas.png');
         this.load.image('sky', 'assets/sky.webp');
         this.load.image('ground', 'assets/piso.webp');
         this.load.image('ground2', 'assets/plat1.webp');
@@ -13,23 +13,16 @@ class Level1 extends Phaser.Scene {
         this.load.image('ground4', 'assets/plat4.webp');
         this.load.image('star', 'assets/flor.png');
 
-        // Cargar sprites de bolas de fuego
         for (let i = 1; i <= 4; i++) {
             this.load.image(`bola${i}`, `assets/Bfuego/Bola(${i}).png`);
         }
 
-        // Cargar sprites de caminar
         for (let i = 0; i <= 25; i++) {
             this.load.image(`sprite${i}`, `assets/sprites/sprite (${i}).png`);
         }
 
-        // Cargar sprites de salto hacia la derecha
         for (let i = 0; i <= 12; i++) {
             this.load.image(`jump_i${i}`, `assets/jump/jump_i (${i}).png`);
-        }
-
-        // Cargar sprites de salto hacia la izquierda
-        for (let i = 0; i <= 12; i++) {
             this.load.image(`jump_D${i}`, `assets/jump/jump_D (${i}).png`);
         }
     }
@@ -46,12 +39,40 @@ class Level1 extends Phaser.Scene {
         this.setupCollisions();
         this.setupScore();
 
-        // Iniciar la caída de bolas de fuego cada 2 segundos
+        // Patrones de caída de bolas de fuego
+        this.patternIndex = 0;
+        this.patterns = [
+            [100, 300, 500, 700], // Patrón 1
+            [50, 150, 250, 350, 450, 550, 650, 750], // Patrón 2
+            [200, 400, 600], // Patrón 3
+            [80, 240, 400, 560, 720], // Patrón 4
+            [120, 360, 600], // Patrón 5
+            [50, 200, 350, 500, 650], // Patrón 6 (nuevo)
+            [100, 250, 400, 550, 700], // Patrón 7 (nuevo)
+            [150, 300, 450, 600, 750], // Patrón 8 (nuevo)
+            [50, 300, 550] // Patrón 9 (nuevo)
+        ];
+
+        // Cambiar patrones cada 2 segundos
         this.time.addEvent({
             delay: 2000,
-            callback: this.spawnBomb,
+            callback: () => {
+                this.patternIndex = (this.patternIndex + 1) % this.patterns.length;
+            },
+            loop: true
+        });
+
+        // Generar bolas de fuego cada 2 segundos
+        this.time.addEvent({
+            delay: 2000,
+            callback: this.spawnBombs,
             callbackScope: this,
             loop: true
+        });
+
+        // Cambiar a la escena FinalLevel después de 30 segundos
+        this.time.delayedCall(5000, () => {
+            this.scene.start('FinalLevel', { score: this.score });
         });
 
         // Crear animación de bolas de fuego
@@ -70,23 +91,19 @@ class Level1 extends Phaser.Scene {
 
     setupPlatforms() {
         this.platforms = this.physics.add.staticGroup();
-
-        // Crear las plataformas y asignarles un nombre único para identificarlas
-        this.platforms.create(400, 595, 'ground').setName('piso').setScale(1).refreshBody();
-        this.platforms.create(665, 378, 'ground2').setName('plat1');
-        this.platforms.create(138, 491, 'ground3').setName('plat2');
-        this.platforms.create(663, 494, 'ground4').setName('plat3');
-        this.platforms.create(103, 380, 'ground5').setName('plat4');
+        this.platforms.create(400, 595, 'ground').setScale(1).refreshBody();
+        this.platforms.create(665, 378, 'ground2');
+        this.platforms.create(138, 491, 'ground3');
+        this.platforms.create(663, 494, 'ground4');
+        this.platforms.create(103, 380, 'ground5');
     }
 
     setupPlayer() {
         this.player = this.physics.add.sprite(100, 450, 'sprite0');
-        this.player.setCollideWorldBounds(true); // Sin rebote
+        this.player.setCollideWorldBounds(true);
         this.cursors = this.input.keyboard.createCursorKeys();
-
-        this.currentFrame = 0; // Control para caminar
-        this.jumpFrame = 0; // Control para salto
-        this.frameDelay = 0; // Manejo de velocidad de animación
+        this.currentFrame = 0;
+        this.jumpFrame = 0;
     }
 
     setupStars() {
@@ -97,7 +114,7 @@ class Level1 extends Phaser.Scene {
         });
 
         this.stars.children.iterate(child => {
-            child.setBounceY(0); // Sin rebote
+            child.setBounceY(0);
         });
     }
 
@@ -108,18 +125,13 @@ class Level1 extends Phaser.Scene {
     setupCollisions() {
         this.physics.add.collider(this.player, this.platforms);
         this.physics.add.collider(this.stars, this.platforms);
-        this.physics.add.collider(this.bombs, this.platforms);
+        this.physics.add.collider(this.bombs, this.platforms, this.hitpiso, null, this);
         this.physics.add.overlap(this.player, this.stars, this.collectStar, null, this);
         this.physics.add.collider(this.player, this.bombs, this.hitBomb, null, this);
-
-        // Colisión de bolas de fuego con las plataformas
-        this.physics.add.collider(this.bombs, this.platforms, this.hitpiso);
-    
     }
 
-    hitpiso(bombs, platform) {
-        bombs.disableBody(true, true); // Desaparecer la bola de fuego al tocar al jugador
-        bombs.destroy();
+    hitpiso(bomb, platform) {
+        bomb.destroy();
     }
 
     setupScore() {
@@ -129,15 +141,17 @@ class Level1 extends Phaser.Scene {
         });
     }
 
-    spawnBomb() {
-        const x = Phaser.Math.Between(50, 750); // Posición aleatoria en X
-        const bomb = this.bombs.create(x, 0, 'bola1'); // Crear bola de fuego
-        bomb.setVelocityY(200); // Caída constante
-        bomb.setGravityY(1); // Sin gravedad adicional
-        bomb.setBounce(0); // Sin rebote
-
-        // Reproducir la animación de la bola de fuego
-        bomb.play('bolaAnim');
+    spawnBombs() {
+        const positions = this.patterns[this.patternIndex]; // Usar el patrón actual
+        for (let i = 0; i < positions.length; i++) {
+            this.time.delayedCall(i * 200, () => {
+                const x = positions[i] + Phaser.Math.Between(-20, 20);
+                const bomb = this.bombs.create(x, 0, 'bola1');
+                bomb.setVelocityY(90); // Velocidad ajustada a 90
+                bomb.setBounce(0);
+                bomb.play('bolaAnim');
+            });
+        }
     }
 
     update() {
@@ -152,9 +166,9 @@ class Level1 extends Phaser.Scene {
         }
 
         if (isJumping && isMovingRight) {
-            this.animateJump("jump_i", 0, 12);
+            this.animateJump("jump_i");
         } else if (isJumping && isMovingLeft) {
-            this.animateJump("jump_D", 0, 12);
+            this.animateJump("jump_D");
         } else if (isMovingLeft) {
             this.player.setVelocityX(-160);
             this.animateWalk(0, 12);
@@ -163,35 +177,19 @@ class Level1 extends Phaser.Scene {
             this.animateWalk(16, 25);
         } else {
             this.player.setVelocityX(0);
-            this.player.setTexture('sprite12'); // Imagen de "quieto"
+            this.player.setTexture('sprite12');
         }
     }
 
     animateWalk(start, end) {
-        if (this.frameDelay % 3 === 0) { // Controla la velocidad de la animación
-            this.currentFrame++;
-            if (this.currentFrame > end) this.currentFrame = start;
-            this.player.setTexture(`sprite${this.currentFrame}`);
-        }
-        this.frameDelay++;
+        this.currentFrame = this.currentFrame >= end ? start : this.currentFrame + 1;
+        this.player.setTexture(`sprite${this.currentFrame}`);
     }
 
-    animateJump(prefix, start, end) {
-        if (this.frameDelay % 5 === 0) { // Controla la velocidad del cambio de imágenes al saltar
-            if (prefix === "jump_D") {
-                this.jumpFrame--;
-                if (this.jumpFrame < start) {
-                    this.jumpFrame = end;
-                }
-            } else if (prefix === "jump_i") {
-                this.jumpFrame++;
-                if (this.jumpFrame > end) {
-                    this.jumpFrame = start;
-                }
-            }
-            this.player.setTexture(`${prefix}${this.jumpFrame}`);
-        }
-        this.frameDelay++;
+    animateJump(prefix) {
+        this.jumpFrame = prefix === "jump_D" ? this.jumpFrame - 1 : this.jumpFrame + 1;
+        this.jumpFrame = this.jumpFrame < 0 ? 12 : (this.jumpFrame > 12 ? 0 : this.jumpFrame);
+        this.player.setTexture(`${prefix}${this.jumpFrame}`);
     }
 
     collectStar(player, star) {
@@ -206,10 +204,9 @@ class Level1 extends Phaser.Scene {
         }
     }
 
-
     hitBomb(player, bomb) {
-        bomb.disableBody(true, true); // Desaparecer la bola de fuego al tocar al jugador
-        this.vidas.vidaperdida(); // Restar una vida
+        bomb.disableBody(true, true);
+        this.vidas.vidaperdida();
 
         if (this.vidas.vidas > 0) {
             player.setTint(0xff0000);
