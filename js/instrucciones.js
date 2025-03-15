@@ -44,9 +44,9 @@ function dibujar() {
     ctx.strokeStyle = '#661b06'; 
     ctx.lineWidth = 1.5; 
 
-    // Resto del texto
+
     ctx.font = '30px Mayan';
-    // Se usa el mismo color y stroke
+
     ctx.fillText('Como jugar?', canvas.width / 2, 150);
     ctx.strokeText('Como jugar?', canvas.width / 2, 150);
 
@@ -68,19 +68,26 @@ function dibujar() {
     ctx.fillText('Buena suerte!', canvas.width / 2, 500);
     ctx.strokeText('Buena suerte!', canvas.width / 2, 500);
 }
+const canvas = document.getElementById('canva-container');
+
 dibujar();
 
-//boton para volver
 const volverButton = document.createElement('button');
 volverButton.textContent = 'Volver';
 volverButton.style.position = 'absolute';
-volverButton.style.top = '700px';
+
+const canvasRect = canvas.getBoundingClientRect();
+const scale = canvasRect.height / canvas.height;
+
+const offsetY = canvasRect.top + (500 * scale) + 20;
+volverButton.style.top = offsetY + 'px';
+
+// estilos del botón
 volverButton.style.left = '50%';
 volverButton.style.transform = 'translateX(-50%)';
 volverButton.style.fontSize = '20px';
 volverButton.style.padding = '10px 20px';
 volverButton.style.cursor = 'pointer';
-
 volverButton.style.backgroundColor = '#d97f29';
 volverButton.style.color = '#661b06';
 volverButton.style.border = '2px solid #661b06';
@@ -92,3 +99,19 @@ volverButton.addEventListener('click', () => {
     window.location.href = '../../index.html';
 });
 document.body.appendChild(volverButton);
+
+// Para pocionar el boton
+function posicionarBoton() {
+    const canvasRect = canvas.getBoundingClientRect();
+    const scale = canvasRect.height / canvas.height;
+    const offsetY = canvasRect.top + (500 * scale) + 20;
+    volverButton.style.top = offsetY + 'px';
+    //Centrar 
+    volverButton.style.left = '50%';
+    volverButton.style.transform = 'translateX(-50%)';
+}
+
+posicionarBoton();
+
+// El boton se acomoda de nuevo
+window.addEventListener('resize', posicionarBoton);
