@@ -81,11 +81,11 @@ class Usuario extends Phaser.Scene {
                     // Asigna alias y score a la variable global
                     globalData.alias = aliasString;
                     globalData.score = 0;
-                    this.scene.start('Level1', globalData);
+                    this.scene.start('Historia1', globalData);
                 } else {
                     globalData.alias = aliasString;
                     globalData.score = 0;
-                    this.scene.start('Level1', globalData);
+                    this.scene.start('Historia1', globalData);
                 }
             } else {
                 Swal.fire({
