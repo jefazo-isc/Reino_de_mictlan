@@ -28,10 +28,11 @@ class Level1 extends Phaser.Scene {
     }
 
     create() {
-        this.score = 0;
+        // Inicializar score desde globalData o empezar en 0
+        this.score = globalData.score || 0;
         this.gameOver = false;
         this.add.image(400, 300, 'sky');
-        this.vidas = new Vidas(this, 3, 50, 26);
+        this.vidas = new Vidas(this, 90, 70);
         this.setupPlatforms();
         this.setupPlayer();
         this.setupStars();
@@ -70,9 +71,11 @@ class Level1 extends Phaser.Scene {
             loop: true
         });
 
-        // Cambiar a la escena FinalLevel después de 30 segundos
+        // Cambiar a la escena Puente después de 5 segundos
         this.time.delayedCall(5000, () => {
-            this.scene.start('FinalLevel', { score: this.score });
+            // Guardar el score en globalData antes de cambiar de escena
+            globalData.score = this.score;
+            this.scene.start('Puente');
         });
 
         // Crear animación de bolas de fuego
@@ -135,7 +138,8 @@ class Level1 extends Phaser.Scene {
     }
 
     setupScore() {
-        this.scoreText = this.add.text(16, 16, 'Score: 0', { 
+        // Mostrar el score actual desde globalData
+        this.scoreText = this.add.text(16, 16, `Score: ${this.score}`, { 
             fontSize: '32px', 
             fill: '#fff' 
         });
@@ -196,6 +200,9 @@ class Level1 extends Phaser.Scene {
         star.disableBody(true, true);
         this.score += 10;
         this.scoreText.setText(`Score: ${this.score}`);
+        
+        // Actualizar el score global
+        globalData.score = this.score;
 
         if (this.stars.countActive(true) === 0) {
             this.stars.children.iterate(child => {
@@ -218,6 +225,10 @@ class Level1 extends Phaser.Scene {
             this.physics.pause();
             player.setTint(0xff0000);
             this.gameOver = true;
+            
+            // Actualizar score global antes de ir a GameOver
+            globalData.score = this.score;
+            this.scene.start('GameOver');
         }
     }
 }

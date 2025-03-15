@@ -11,15 +11,16 @@ class FinalLevel extends Phaser.Scene {
         this.playerSpeed = 160;
         this.jumpForce = -330;
         this.lastDirection = '';
+		this.bossInvulnerable = false;
     }
 
     preload() {
         // Cargar assets base
 
         
-        this.load.image('xibalba_bg', 'assets/a.webp');
-        this.load.image('ground', 'assets/piso.png');
-        this.load.image('ground2', 'assets/platform.png');
+        this.load.image('xibalba_bg', 'assets/a.jpeg');
+        this.load.image('ground', 'assets/piso2.png');
+        this.load.image('ground2', 'assets/piso.png');
         this.load.image('star', 'assets/star.png');
         this.load.image('bomb', 'assets/bomb.png');
 
@@ -36,7 +37,7 @@ class FinalLevel extends Phaser.Scene {
 
 
 
- for (let i = 0; i <= 18; i++) {
+ for (let i = 0; i < 19; i++) {
         this.load.image(`boss_${i}`, `assets/sprites/boss/${i}.webp`);
     }
 		
@@ -45,7 +46,9 @@ class FinalLevel extends Phaser.Scene {
 			console.log(`🔥 Asset cargado: ${key}`);
 		});
 
-
+		this.load.on('loaderror', (file) => {
+				console.error(`Error cargando: ${file.key}`);
+		});
 
 		
     }//preload
@@ -68,7 +71,7 @@ class FinalLevel extends Phaser.Scene {
        
     
         // Fondo y texto
-        this.add.image(510, 300, 'xibalba_bg');
+        this.add.image(400, 330, 'xibalba_bg');
         this.add.text(300, 50, 'XIBALBÁ: EL INFIERNO MAYA', {
             fontSize: '32px',
             fill: '#FF3300'
@@ -99,23 +102,8 @@ class FinalLevel extends Phaser.Scene {
         this.createBossAnimations();
 
         
- this.anims.create({
-        key: 'boss_entrance',
-        frames: [
-            { key: 'boss_0' },
-            { key: 'boss_1' },
-            // ... añade todos los frames hasta 31
-            { key: 'boss_31' }
-        ],
-        frameRate: 10,
-        repeat: 0
-    });
 
-    // Evento al terminar la animación
-    this.boss.on('animationcomplete', () => {
-        console.log('¡El jefe ha aparecido!');
-        // Aquí puedes iniciar su comportamiento normal
-    });
+ 
 
 console.log('Texturas del jugador:', this.textures.get('sprite0'));
     console.log('Texturas del boss:', this.textures.get('boss_0'));
@@ -125,30 +113,49 @@ console.log('Texturas del jugador:', this.textures.get('sprite0'));
 
 
 
-   setupPlatforms() {
+setupPlatforms() {
+    // Grupo de plataformas fijas (estáticas)
     this.platforms = this.physics.add.staticGroup();
-    
-    const platformsData = [
-        {x: 400, y: 595, key: 'ground', scale: 1},
-        {x: 720, y: 500, key: 'ground2'},
-        {x: 8, y: 380, key: 'ground2'},
-        {x: 720, y: 380, key: 'ground2'},
-        {x: 73, y: 500, key: 'ground2'}
+
+    // Suelo fijo
+    this.platforms.create(300, 595, 'ground').setScale(1).refreshBody();
+
+    // Grupo de plataformas móviles (dinámicas)
+    this.movingPlatforms = this.physics.add.group({
+        allowGravity: false,
+        immovable: true  // Para que no sean afectadas por el jugador
+    });
+
+    // Plataformas móviles con diferentes tamaños y movimientos
+    const movingPlatformsData = [
+        { x: 100, y: 500, key: 'ground2', scaleX: 1, moveX: 150, moveY: 0 },  // Horizontal
+        { x: 1100, y: 100, key: 'ground2', scaleX: 1, moveX: 0, moveY: 510 }, // Horizontal más larga
+        { x: 300, y: 300, key: 'ground2', scaleX: 0.8, moveX: 0, moveY: 100 }, // Vertical
+        { x: 650, y: 200, key: 'ground2', scaleX: 1.2, moveX: 0, moveY: 120 }, // Otra vertical
     ];
 
-    platformsData.forEach(data => {
-        const platform = this.platforms.create(data.x, data.y, data.key);
-        if (data.scale) platform.setScale(data.scale).refreshBody();
-        // Habilitar cuerpo físico y hacer inamovible
-        platform.enableBody = true;
-        platform.body.immovable = true;
+    movingPlatformsData.forEach(data => {
+        const platform = this.movingPlatforms.create(data.x, data.y, data.key);
+        platform.setScale(data.scaleX, 1);
+        platform.setImmovable(true); // No se mueve por colisiones
+
+        // Animación del movimiento
+        this.tweens.add({
+            targets: platform,
+            x: platform.x + data.moveX,  // Movimiento horizontal
+            y: platform.y + data.moveY,  // Movimiento vertical
+            ease: 'Linear',
+            duration: 3000,
+            yoyo: true,
+            repeat: -1
+        });
     });
-}
+}//plataforms
 
     setupPlayer() {
         this.player = this.physics.add.sprite(100, 450, 'sprite0');
         this.player.setBounce(0.2);
-        this.player.setCollideWorldBounds(true);
+        this.player.setCollideWorldBounds(false);
         
         this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -184,56 +191,75 @@ console.log('Texturas del jugador:', this.textures.get('sprite0'));
     }
 
 setupBoss() {
+	
+	
     // Crear sprite con físicas
-    this.boss = this.physics.add.sprite(400, 300, 'boss_0')
+    this.boss = this.physics.add.sprite(400, 537, 'boss_0')
         .setCollideWorldBounds(true)
         .setDepth(1);
 
     // Ajustar tamaño del cuerpo de colisión (ancho, alto)
     this.boss.body.setSize(120, 180);
     
-    // Opcional: Ajustar offset si es necesario
-    // this.boss.body.offset.set(60, 90);
-    
     // Deshabilitar físicas inicialmente
     this.boss.body.enable = false;
 }
 
-
 createBossAnimations() {
-    // Animación de aparición (hasta frame 28)
+    // Animación de aparición (usando frames 0-11)
     this.anims.create({
         key: 'boss_entrance',
-        frames: Array.from({length: 12}, (_, i) => ({ key: `boss_${i}` })), // 0-11
+        frames: Array.from({length: 12}, (_, i) => ({ key: `boss_${i}` })),
         frameRate: 10,
         repeat: 0
     });
 
-    // Animación de reposo (idle) usando frames 20-28
+    // Animación idle (frames 12-18)
     this.anims.create({
         key: 'boss_idle',
-        frames: Array.from({length: 7}, (_, i) => ({ key: `boss_${i + 12}` })), // 12-18
+        frames: Array.from({length: 7}, (_, i) => ({ key: `boss_${i + 12}` })),
         frameRate: 8,
         repeat: -1
     });
 
-    // Animación de ataque (ajustar según tus frames disponibles)
+    // Animación de ataque (frames 7-11)
     this.anims.create({
         key: 'boss_attack',
-        frames: Array.from({length: 6}, (_, i) => ({ key: `boss_${i + 10}` })), // 10-15
+        frames: Array.from({length: 5}, (_, i) => ({ key: `boss_${i + 7}` })),
         frameRate: 12,
         repeat: 0
     });
 
+
+  this.anims.create({
+        key: 'boss_death',
+        frames: Array.from({length: 12}, (_, i) => ({ 
+            key: `boss_${11 - i}` // Invertimos el orden (11-0)
+        })),
+        frameRate: 10,
+        repeat: 0
+    });
+
+
+  // Cuando termina la animación de entrada, elevamos el jefe hasta su posición final
     this.boss.on('animationcomplete', (anim) => {
         if (anim.key === 'boss_entrance') {
-            this.boss.body.enable = true;
-            this.boss.play('boss_idle'); // Cambia a animación idle
+            // Tween para elevar al jefe (de groundY a 300, por ejemplo)
+            this.tweens.add({
+                targets: this.boss,
+                y: 300, // posición final deseada
+                ease: 'Power2',
+                duration: 3000,
+                onComplete: () => {
+                    
+                    this.boss.play('boss_idle');
+                }
+            });
         }
-    });
-    
+    });    
     this.boss.play('boss_entrance');
 }
+
 
     createBossHealthBar() {
         this.bossHealthBar = this.add.graphics();
@@ -253,36 +279,45 @@ createBossAnimations() {
         this.bossHealthBar.fillRect(50, 50, width, 30);
     }
 
- setupCollisions() {
-    // Colisiones básicas
+setupCollisions() {
+
+	this.physics.add.collider(this.player, this.movingPlatforms);
     this.physics.add.collider(this.player, this.platforms);
     this.physics.add.collider(this.stars, this.platforms);
+    this.physics.add.collider(this.stars, this.movingPlatforms);
+    this.physics.add.collider(this.bombs, this.movingPlatforms);
     this.physics.add.collider(this.bombs, this.platforms);
-    
-    // Colisiones con el jefe
-    this.physics.add.collider(this.boss, this.platforms); // ¡Nuevo! Para que el jefe no caiga
-    
-    // Overlaps con objetos
+    this.physics.add.collider(this.boss, this.platforms);
+
     this.physics.add.overlap(this.player, this.stars, this.collectStar, null, this);
     this.physics.add.collider(this.player, this.bombs, this.hitBomb, null, this);
-    
-    // Colisión bombas-jefe
+
     this.physics.add.overlap(this.bombs, this.boss, (bomb, boss) => {
-        bomb.disableBody(true, true);
+        if (this.bossInvulnerable || !boss.active) return;
+
+            bomb.disableBody(true, true); // ¡Falta esta línea!
+        this.cameras.main.shake(500, 0.02)
         this.damageBoss(25);
+        
+        // Activar invulnerabilidad CORRECTAMENTE
+        this.bossInvulnerable = true;
+        this.time.delayedCall(500, () => this.bossInvulnerable = false);
     });
 }
 
 
+
+
 damageBoss(amount) {
-    this.bossHealth -= amount;
+    if (this.gameOver || this.bossHealth <= 0 || this.bossInvulnerable) return;
+    
+    // Aplicar daño seguro
+    this.bossHealth = Math.max(0, this.bossHealth - Math.min(amount, this.bossHealth));
     this.updateBossHealthBar();
     
-    // Efectos visuales
-    this.boss.play('boss_attack');
-    this.cameras.main.shake(50, 0.01);
+    console.log(`Daño: ${amount} | Salud: ${this.bossHealth}`); // Debug
     
-    // Destello de daño
+    // Efectos visuales sin cambiar animación principal
     this.boss.setTint(0xFF0000);
     this.time.delayedCall(100, () => this.boss.clearTint());
     
@@ -290,15 +325,33 @@ damageBoss(amount) {
 }
 
 
-    checkBossPhase() {
-        if (this.bossHealth <= 0) {
+checkBossPhase() {
+    // Verificar si ya está derrotado
+    if (this.bossHealth <= 0) {
+        if (!this.gameOver) {
+            // Forzar salud a 0 para evitar valores negativos
+            this.bossHealth = 0;
             this.defeatBoss();
-        } else if (this.bossHealth <= 300 && !this.isEnraged) {
-            this.startEnragedPhase();
-        } else if (this.bossHealth <= 600 && this.currentPhase === 1) {
-            this.startPhaseTwo();
         }
+        return;
     }
+
+    // Fase 2 (600 de vida)
+    if (this.bossHealth <= 600 && this.currentPhase === 1) {
+        this.currentPhase = 2;
+        console.log('¡Fase 2 activada!');
+        this.startPhaseTwo();
+    }
+
+    // Fase enfurecida (300 de vida)
+    if (this.bossHealth <= 300 && !this.isEnraged) {
+        this.isEnraged = true;
+        console.log('¡Fase enfurecida activada!');
+        this.startEnragedPhase();
+    }
+    
+    console.log(`FASE: ${this.currentPhase} | SALUD: ${this.bossHealth} | ENFURECIDO: ${this.isEnraged}`);
+}
 
     startPhaseTwo() {
         this.currentPhase = 2;
@@ -372,7 +425,27 @@ damageBoss(amount) {
     if (this.isEnraged) {
         this.boss.rotation += 0.02; // Efecto visual de enfurecimiento
     }
-}
+
+
+this.physics.world.on('worldbounds', (body) => {
+    if (body.gameObject === this.player) {
+        // Si el jugador se sale por abajo, esperar antes de terminar el juego
+        this.time.delayedCall(1000, () => {  // Esperar 2 segundos
+            this.gameOver();
+        });
+    }
+});
+
+if (this.player.y > 700) {
+        this.handleFallDamage();
+    }
+   
+           console.log('Estado del jefe:',
+    `Visible: ${this.boss.visible}`,
+    `Salud: ${this.bossHealth}`,
+    `Animación: ${this.boss.anims.currentAnim?.key}`
+);
+}//update
 
     handlePlayerMovement() {
         const isGrounded = this.player.body.touching.down;
@@ -455,26 +528,41 @@ animateJump(prefix, start, end) {
         bomb.setBounce(1).setVelocity(Phaser.Math.Between(-200, 200), 20);
     }
 
-    hitBomb(player, bomb) {
+hitBomb(player, bomb) {
+    if (this.gameOver) return;
+    
+    bomb.disableBody(true, true);
+    globalData.lives--;
+    this.livesText.setText(`Lives: ${globalData.lives}`);
+    
+    if (globalData.lives <= 0) {
         this.physics.pause();
         player.setTint(0xff0000);
         this.gameOver = true;
+        this.showGameOver();
+    } else {
+        // Reseteo seguro del jugador
+        player.setPosition(100, 450);
+        player.setVelocity(0, 0);
+        player.clearTint();
     }
+}
 
 defeatBoss() {
-    this.physics.pause();
+    console.log('¡Jefe derrotado!');
+    this.gameOver = true;
+    
+    // Solo detener movimientos
+    this.boss.body.setVelocity(0);
+    
+    // Animación de muerte
     this.boss.play('boss_death');
     
-    // Efecto de victoria
+    // Efecto visual
+    this.boss.setTint(0xFF0000);
+    
     this.time.delayedCall(2000, () => {
-        this.cameras.main.fadeOut(1000, 0, 0, 0, (_, progress) => {
-            if (progress === 1) {
-                this.scene.start('Victoria', { 
-                    score: this.score,
-                    level: 'FinalLevel'
-                });
-            }
-        });
+        this.cameras.main.fadeOut(1000, 0, 0, 0);
     });
 }
 
@@ -483,20 +571,47 @@ defeatBoss() {
     this.scoreText = this.add.text(16, 16, 'Score: 0', { 
         fontSize: '32px', 
         fill: '#FFF', // Cambié el color a blanco para que combine con Xibalba
-        fontFamily: 'Mayan' // Usa la fuente maya que cargaste
+        fontFamily: 'Mayan'
     });
-	}
+
+			this.livesText = this.add.text(16, 60, `Lives: ${globalData.lives}`,  {
+			fontSize: '32px',
+			fill: '#FF3300'
+    });
+    
+	}//setupScore
 
 
 
- handleJumpAnimation(isMovingLeft, isMovingRight) {
-    if (isMovingLeft) {
-        this.animateJump("jump_D", 0, 12);
-    } else if (isMovingRight) {
-        this.animateJump("jump_i", 0, 12);
+		handleJumpAnimation(isMovingLeft, isMovingRight) {
+			if (isMovingLeft)	{	this.animateJump("jump_D", 0, 12);
+			}else if (isMovingRight) {	this.animateJump("jump_i", 0, 12);	}
+		}
+
+	handleFallDamage() {
+    if (this.gameOver) return;
+    
+    globalData.lives--;
+    this.livesText.setText(`Lives: ${globalData.lives}`);
+    
+    // Efectos de caída
+    this.cameras.main.shake(300, 0.02);
+    this.player.setVelocity(0, 0);
+    
+    if (globalData.lives <= 0) {
+        this.gameOver = true;
+        this.showGameOver();
+    } else {
+        // Respawn seguro
+        this.player.setPosition(100, 450);
+        this.time.delayedCall(500, () => {
+            this.player.clearTint();
+        });
     }
-} 
 }
+
+
+}//clase
 
 // Hacer disponible la clase globalmente
 window.FinalLevel = FinalLevel;
