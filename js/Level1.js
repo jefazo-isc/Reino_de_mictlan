@@ -31,7 +31,7 @@ class Level1 extends Phaser.Scene {
         this.score = 0;
         this.gameOver = false;
         this.add.image(400, 300, 'sky');
-        this.vidas = new Vidas(this, 3, 50, 26);
+        this.vidas = new Vidas(this, 90, 70);
         this.setupPlatforms();
         this.setupPlayer();
         this.setupStars();
@@ -72,7 +72,7 @@ class Level1 extends Phaser.Scene {
 
         // Cambiar a la escena FinalLevel después de 30 segundos
         this.time.delayedCall(5000, () => {
-            this.scene.start('FinalLevel', { score: this.score });
+            this.scene.start('Puente', { score: this.score });
         });
 
         // Crear animación de bolas de fuego
