@@ -26,7 +26,7 @@ class Puente extends Phaser.Scene {
     }
 
     create() {
-        this.score = 0;
+        this.score = globalData.score || 0;
         this.gameOver = false;
         this.lanzasRecogidas = 0;
 
@@ -102,14 +102,13 @@ class Puente extends Phaser.Scene {
         // Usamos overlap para detectar cuando el jugador toca una lanza clavada
         this.physics.add.overlap(this.player, this.lanzasClavadas, this.recogerLanza, null, this);
     }
-
     setupScore() {
-        this.scoreText = this.add.text(16, 16, 'Score: 0', {
+        // Mostrar el score acumulado desde Level1
+        this.scoreText = this.add.text(16, 16, `Score: ${this.score}`, {
             fontSize: '32px',
             fill: '#fff'
         });
     }
-
     setupLanzasCounter() {
         this.lanzasIcon = this.add.image(80, 100, 'lanzas').setScale(0.5);
         this.lanzasText = this.add.text(90, 90, 'x 0', {
