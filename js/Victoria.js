@@ -4,49 +4,49 @@ class Victoria extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('sky', '../assets/sky.png');
+        this.load.image('victoria', '../assets/victoria.webp');
     }
 
     create() {
 
-        this.add.image(400, 300, 'sky');
+        this.add.image(400, 300, 'victoria');
         
         // Título
-        const title = this.add.text(240, 150, '¡GANASTE!', {
+        const title = this.add.text(270, 70, '¡GANASTE!', {
             fontSize: '60px',
-            fill: '#FF0000',
+            fill: '#e44217',
             fontFamily: 'Mayan',
             stroke: '#000000',
             strokeThickness: 5
         });
 
-        const textoVictoria = this.add.text(150, 240, '¡Felicidades, has completado el juego!', {
+        const textoVictoria = this.add.text(160, 240, '¡Felicidades, has completado el juego!', {
             fontSize: '30px',
-            fill: '#FF0000',
+            fill: '#e44217',
             fontFamily: 'Mayan',
             stroke: '#000000',
             strokeThickness: 5
         });
 
-        const aliasLabel = this.add.text(345, 320, 'Testest', {
+        const aliasLabel = this.add.text(370, 320, globalData.alias, {
             fontSize: '30px',
-            fill: '#FF0000',
+            fill: '#e44217',
             fontFamily: 'Mayan',
             stroke: '#000000',
             strokeThickness: 5
         });
 
-        const text = this.add.text(320, 400, 'Tu puntaje: ', {
+        const text = this.add.text(350, 370, 'Tu puntaje: ', {
             fontSize: '30px',
-            fill: '#FF0000',
+            fill: '#e44217',
             fontFamily: 'Mayan',
             stroke: '#000000',
             strokeThickness: 5
         });
 
-        const score = this.add.text(370, 450, globalData.score, {
+        const score = this.add.text(390, 410, globalData.score, {
             fontSize: '30px',
-            fill: '#FF0000',
+            fill: '#e44217',
             fontFamily: 'Mayan',
             stroke: '#000000',
             strokeThickness: 5
@@ -80,7 +80,7 @@ class Victoria extends Phaser.Scene {
             volverMenu.alpha = 1;
         });
 
-        const volverButton = this.add.text(500, 520, 'VOLVER A INTENTARLO', {
+        const volverButton = this.add.text(410, 520, 'VOLVER A INTENTARLO', {
             fontSize: '30px',
             padding: { left: 5, right: 5, top: 5, bottom: 5 },
             fontFamily: 'Mayan',

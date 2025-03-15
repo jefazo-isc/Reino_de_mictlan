@@ -4,11 +4,11 @@ class GameOver extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('sky', '../assets/sky.webp');
+        this.load.image('lose', '../assets/lose.webp');
     }
 
     create() {
-        this.add.image(400, 300, 'sky');
+        this.add.image(400, 300, 'lose');
         
         const title = this.add.text(200, 200, '¡GAME OVER!', {
             fontSize: '60px',
@@ -26,7 +26,7 @@ class GameOver extends Phaser.Scene {
             strokeThickness: 5
         });
 
-        const text = this.add.text(320, 400, 'Tu puntaje: ', {
+        const text = this.add.text(320, 380, 'Tu puntaje: ', {
             fontSize: '30px',
             fill: '#FF0000',
             fontFamily: 'Mayan',
@@ -34,7 +34,7 @@ class GameOver extends Phaser.Scene {
             strokeThickness: 5
         });
 
-        const score = this.add.text(370, 450, globalData.score, {
+        const score = this.add.text(370, 430, globalData.score, {
             fontSize: '30px',
             fill: '#FF0000',
             fontFamily: 'Mayan',
