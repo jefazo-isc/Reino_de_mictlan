@@ -5,24 +5,16 @@ class Level1 extends Phaser.Scene {
     }
 
     preload() {
-        // 1. Determinar prefijo del personaje seleccionado
-        const selectedChar = globalData.selectedCharacter;
-        this.characterPrefix = selectedChar.replace('character', 'p'); // Convierte "character1" a "p1"
-
-        this.load.image('parado', `assets/caminar${this.characterPrefix}/Parado.png`); // Nueva línea
-        // 2. Cargar assets según personaje seleccionado
-        // Caminar (24 frames: 1-12 izquierda, 13-24 derecha)
-        for (let i = 1; i <= 24; i++) {
-            this.load.image(`caminar${i}`, `assets/caminar${this.characterPrefix}/caminar(${i}).png`);
-        }
+        // Limpiar texturas anteriores
+        this.cleanCharacterTextures();
         
-        // Saltos (0-12 frames para ambas direcciones)
-        for (let i = 1; i <= 9; i++) {
-            this.load.image(`saltoi${i}`, `assets/jump${this.characterPrefix}/saltoi(${i}).png`);
-            this.load.image(`saltod${i}`, `assets/jump${this.characterPrefix}/saltod(${i}).png`);
-        }
+        // Determinar prefijo del personaje
+        this.characterPrefix = globalData.selectedCharacter === 'character1' ? 'p1' : 'p2';
+        
+        // Cargar assets del personaje
+        this.loadCharacterAssets();
 
-        // 3. Cargar assets comunes
+        // Cargar assets comunes
         this.load.image('vidas', 'assets/vidas.png');
         this.load.image('sky', 'assets/sky.webp');
         this.load.image('ground', 'assets/piso.webp');
@@ -42,12 +34,43 @@ class Level1 extends Phaser.Scene {
         }
     }
 
+    cleanCharacterTextures() {
+        // Eliminar texturas existentes
+        const removeTexture = (key) => {
+            if (this.textures.exists(key)) this.textures.remove(key);
+        };
+
+        removeTexture('parado');
+        
+        for (let i = 1; i <= 24; i++) removeTexture(`caminar${i}`);
+        for (let i = 1; i <= 9; i++) {
+            removeTexture(`saltoi${i}`);
+            removeTexture(`saltod${i}`);
+        }
+    }
+
+    loadCharacterAssets() {
+        // Cargar nuevas texturas del personaje
+        this.load.image('parado', `assets/caminar${this.characterPrefix}/Parado.png`);
+        
+        // Caminar (24 frames)
+        for (let i = 1; i <= 24; i++) {
+            this.load.image(`caminar${i}`, `assets/caminar${this.characterPrefix}/caminar(${i}).png`);
+        }
+        
+        // Saltos (9 frames)
+        for (let i = 1; i <= 9; i++) {
+            this.load.image(`saltoi${i}`, `assets/jump${this.characterPrefix}/saltoi(${i}).png`);
+            this.load.image(`saltod${i}`, `assets/jump${this.characterPrefix}/saltod(${i}).png`);
+        }
+    }
+
     create() {
         // Inicialización del juego
         this.score = globalData.score || 0;
         this.gameOver = false;
         this.add.image(400, 300, 'sky');
-        this.vidas = new Vidas(this, 90, 70);
+        this.vidas = new Vidas(this, 90, 70, globalData.vidas);
         this.setupPlatforms();
         this.setupPlayer();
         this.createPauseButton();
@@ -55,8 +78,11 @@ class Level1 extends Phaser.Scene {
         this.setupBombs();
         this.setupCollisions();
         this.setupScore();
+        
+        // Configurar música
         this.musica = this.sound.add('musicaFondo', { loop: true });
-        this.musica.play()
+        this.musica.play();
+
         // Configuración de patrones de bolas
         this.patternIndex = 0;
         this.patterns = [
@@ -100,14 +126,13 @@ class Level1 extends Phaser.Scene {
 
         // Transición a Puente
         this.time.delayedCall(20000, () => {
-            window.globalData.score = this.score;
-            musica.stop();
+            globalData.score = this.score;
+            this.musica.stop();
             this.scene.start('Puente');
         });
-
     }
+
     createPauseButton() {
-        // Botón de pausa en la esquina superior derecha
         this.pauseButton = this.add.text(750, 30, '⏸', {
             fontSize: '32px',
             fill: '#fff',
@@ -125,50 +150,50 @@ class Level1 extends Phaser.Scene {
             this.isPaused = !this.isPaused;
             
             if (this.isPaused) {
-                this.physics.pause();
+                this.physics.world.pause();
                 this.time.paused = true;
-                if (this.musica) this.musica.pause(); // Verificar existencia
+                if (this.musica && this.musica.isPlaying) this.musica.pause();
                 this.showPauseMenu();
             } else {
-                this.physics.resume();
+                this.physics.world.resume();
                 this.time.paused = false;
-                if (this.musica) this.musica.resume(); // Verificar existencia
+                if (this.musica && !this.musica.isPlaying) this.musica.resume();
                 this.hidePauseMenu();
             }
-        }}
-
-        showPauseMenu() {
-            // Fondo semitransparente
-            this.pauseOverlay = this.add.graphics(400, 300, 800, 600, 0x000000, 0.7)
-                .setDepth(999);
-    
-            // Botón de reanudar
-            this.resumeButton = this.add.text(400, 300, 'Reanudar', {
-                fontSize: '48px',
-                fill: '#fff',
-                backgroundColor: '#000000',
-                padding: { x: 20, y: 10 }
-            })
-            .setOrigin(0.5)
-            .setInteractive()
-            .on('pointerdown', () => this.togglePause())
-            .setDepth(1000);
-    
-            // Texto de pausa
-            this.pauseText = this.add.text(400, 200, 'PAUSA', {
-                fontSize: '64px',
-                fill: '#FFD700',
-                fontStyle: 'bold'
-            })
-            .setOrigin(0.5)
-            .setDepth(1000);
         }
+    }
 
-        hidePauseMenu() {
-            this.pauseOverlay.destroy();
-            this.resumeButton.destroy();
-            this.pauseText.destroy();
-        }
+    showPauseMenu() {
+        this.pauseOverlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7)
+            .setOrigin(0.5)
+            .setDepth(999);
+
+        this.resumeButton = this.add.text(400, 300, 'Reanudar', {
+            fontSize: '48px',
+            fill: '#fff',
+            backgroundColor: '#000000',
+            padding: { x: 20, y: 10 }
+        })
+        .setOrigin(0.5)
+        .setInteractive()
+        .on('pointerdown', () => this.togglePause())
+        .setDepth(1000);
+
+        this.pauseText = this.add.text(400, 200, 'PAUSA', {
+            fontSize: '64px',
+            fill: '#FFD700',
+            fontStyle: 'bold'
+        })
+        .setOrigin(0.5)
+        .setDepth(1000);
+    }
+
+    hidePauseMenu() {
+        this.pauseOverlay.destroy();
+        this.resumeButton.destroy();
+        this.pauseText.destroy();
+    }
+
     setupPlatforms() {
         this.platforms = this.physics.add.staticGroup();
         this.platforms.create(400, 595, 'ground').setScale(1).refreshBody();
@@ -179,10 +204,12 @@ class Level1 extends Phaser.Scene {
     }
 
     setupPlayer() {
-        this.player = this.physics.add.sprite(100, 450, 'caminar1');
+        // Frame inicial basado en personaje
+        const neutralFrame = this.characterPrefix === 'p1' ? 'caminar1' : 'caminar13';
+        this.player = this.physics.add.sprite(100, 450, neutralFrame);
         this.player.setCollideWorldBounds(true);
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.currentFrame = 1;
+        this.currentFrame = this.characterPrefix === 'p1' ? 1 : 13;
         this.jumpFrame = 0;
     }
 
@@ -192,7 +219,6 @@ class Level1 extends Phaser.Scene {
             repeat: 11,
             setXY: { x: 12, y: 0, stepX: 70 }
         });
-
         this.stars.children.iterate(child => child.setBounceY(0));
     }
 
@@ -233,6 +259,7 @@ class Level1 extends Phaser.Scene {
 
     update() {
         if (this.gameOver || this.isPaused) return;
+
         const isJumping = this.cursors.up.isDown && this.player.body.touching.down;
         const isMovingRight = this.cursors.right.isDown;
         const isMovingLeft = this.cursors.left.isDown;
@@ -253,7 +280,7 @@ class Level1 extends Phaser.Scene {
         } 
         else {
             this.player.setVelocityX(0);
-            this.player.setTexture('caminar1'); // Posición neutral
+            this.player.setTexture('parado');
         }
     }
 
@@ -263,8 +290,9 @@ class Level1 extends Phaser.Scene {
     }
 
     animateJump(direction) {
-        this.jumpFrame = (this.jumpFrame + 1) % 13; // Ciclo 0-12
-        this.player.setTexture(`${direction}${this.jumpFrame}`);
+        this.jumpFrame = (this.jumpFrame + 1) % 10;
+        const frameIndex = Math.min(this.jumpFrame + 1, 9); // Asegurar máximo frame 9
+        this.player.setTexture(`${direction}${frameIndex}`);
     }
 
     collectStar(player, star) {
@@ -275,7 +303,6 @@ class Level1 extends Phaser.Scene {
         globalData.score = this.score;
 
         if (this.stars.countActive(true) === 0) {
-            this.stars.children.iterate(child => child.enableBody(true, child.x, 0, true, true));
         }
     }
 
@@ -286,16 +313,13 @@ class Level1 extends Phaser.Scene {
 
         if (this.vidas.vidas > 0) {
             player.setTint(0xff0000);
-            this.time.delayedCall(500, () => {
-                player.clearTint();
-                this.physics.resume();
-            });
+            this.time.delayedCall(500, () => player.clearTint());
         } else {
-            this.physics.pause();
+            this.physics.world.pause();
             player.setTint(0xff0000);
             this.gameOver = true;
             globalData.score = this.score;
-            this.scene.start('GameOver', globalData);
+            this.scene.start('GameOver');
         }
     }
 }

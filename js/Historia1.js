@@ -5,6 +5,7 @@ class Historia1 extends Phaser.Scene {
 
     init(data) {
         globalData.score = data.score || 0;
+        globalData.selectedCharacter = data.selectedCharacter;
     }
 
     preload() {
