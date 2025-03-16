@@ -147,6 +147,8 @@ class Puente extends Phaser.Scene {
     recogerLanza(player, lanza) {
         if (lanza?.active) {
             lanza.destroy();
+            this.score += 15;
+            this.scoreText.setText(`Score: ${this.score}`);
             this.lanzasRecogidas++;
             this.lanzasText.setText(`x ${this.lanzasRecogidas}`);
 
