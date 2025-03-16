@@ -71,6 +71,7 @@ class Level1 extends Phaser.Scene {
         this.gameOver = false;
         this.add.image(400, 300, 'sky');
         this.vidas = new Vidas(this, 90, 70, globalData.vidas);
+        globalData.vidas = this.vidas.vidas; // Sincronizar al inicio
         this.setupPlatforms();
         this.setupPlayer();
         this.createPauseButton();
@@ -127,6 +128,7 @@ class Level1 extends Phaser.Scene {
         // Transición a Puente
         this.time.delayedCall(5000, () => {
             globalData.score = this.score;
+            globalData.vidas = this.vidas.vidas; // Guardar estado actual
             this.musica.stop();
             this.scene.start('Puente');
         });

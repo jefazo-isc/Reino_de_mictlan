@@ -46,8 +46,8 @@ class Puente extends Phaser.Scene {
         this.add.image(400, 300, 'Puente');
         this.musica = this.sound.add('musicaFondo', { loop: true });
         this.musica.play();
-
         this.vidas = new Vidas(this, 90, 70);
+        globalData.vidas = this.vidas.vidas; // Mantener sincronizado
         this.setupPlatforms();
         this.setupPlayer();
         this.setupLanzas();
