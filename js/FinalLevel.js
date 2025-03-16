@@ -28,7 +28,7 @@ class FinalLevel extends Phaser.Scene {
        	this.load.image('powerup', 'assets/powerup.png'); // Asegúrate de tener esta imagen
 
         // Cargar sprites del jugador
-        for (let i = 1; i <= 25; i++) {
+        for (let i = 1; i < 25; i++) {
             this.load.image(`sprite${i}`, `assets/caminarp1/caminar(${i}).png`);
         }
 
