@@ -18,9 +18,10 @@ class Puente extends Phaser.Scene {
         }
         
         // Saltos (0-12 frames para ambas direcciones)
-        for (let i = 1; i <= 12; i++) {
-            this.load.image(`saltoi${i}`, `assets/caminar${this.characterPrefix}/saltoi(${i}).png`);
-            this.load.image(`saltod${i}`, `assets/caminar${this.characterPrefix}/saltod(${i}).png`);
+        
+        for (let i = 1; i <= 9; i++) {
+            this.load.image(`saltoi${i}`, `assets/jump${this.characterPrefix}/saltoi(${i}).png`);
+            this.load.image(`saltod${i}`, `assets/jump${this.characterPrefix}/saltod(${i}).png`);
         }
 
         // 3. Cargar assets comunes
