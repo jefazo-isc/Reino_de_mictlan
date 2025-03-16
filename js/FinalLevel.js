@@ -14,6 +14,10 @@ class FinalLevel extends Phaser.Scene {
 		this.bossInvulnerable = false;
 		this.isPowerUpActive = false;
     	this.powerUpTime = 0;
+
+    	this.canThrow = true; // Cooldown de lanzamiento
+   		this.playerBombs = null; // Solo declarar, no inicializar aquí
+ 		this.isFacingLeft = false; // Dirección del jugador
     }
 
     preload() {
@@ -25,7 +29,8 @@ class FinalLevel extends Phaser.Scene {
         this.load.image('ground', 'assets/piso2.png');
         this.load.image('ground2', 'assets/piso.webp');
         this.load.image('bomb', 'assets/bomb.png');
-       	this.load.image('powerup', 'assets/powerup.png'); // Asegúrate de tener esta imagen
+       	this.load.image('powerup', 'assets/powerup.png');
+       	this.load.image('bomb_left', 'assets/star.png');
 
         // Cargar sprites del jugador
         for (let i = 1; i < 25; i++) {
@@ -45,7 +50,7 @@ class FinalLevel extends Phaser.Scene {
     }
     
 
-   	for (let i = 0; i < 19; i++) {
+   	for (let i = 0; i < 17; i++) {
    		this.load.image(`boss_atk${i}`, `assets/caminarp1/boss/${i}.png`);
     }
 		
@@ -64,6 +69,10 @@ class FinalLevel extends Phaser.Scene {
 
     create() {
 
+
+    	this.playerBombs = this.physics.add.group();
+   		this.powerups = this.physics.add.group();
+
     this.input.once('pointerdown', () => {
         if (this.sound.context.state === 'suspended') {
             this.sound.context.resume();
@@ -81,26 +90,19 @@ class FinalLevel extends Phaser.Scene {
         // Fondo y texto
         this.add.image(400, 330, 'xibalba_bg');
 
-        // Plataformas
-        this.setupPlatforms();
-        
-        // Jugador
-        this.setupPlayer();
-        
-        // Objetos
-        this.setupBombs();
-        
-        // Jefe
-        this.setupBoss();
-        
-   		this.powerups = this.physics.add.group();
-   		this.setupPowerups();
-        // Colisiones
-        this.setupCollisions();
+   this.setupPlatforms();
+    this.setupPlayer();
+    this.setupBombs();
+    this.setupBoss();
+    this.setupPowerups();
+    this.setupCollisions(); 
         
         // Interfaz
         this.setupScore();
         
+
+      	this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+      	
         this.createBossHealthBar();
         
         // Animaciones del jefe
@@ -216,25 +218,18 @@ setupPlatforms() {
     }
 
 setupBoss() {
-	
-	
-    // Crear sprite con físicas
     this.boss = this.physics.add.sprite(400, 537, 'boss_0')
         .setCollideWorldBounds(true)
         .setDepth(1);
-
-    // Ajustar tamaño del cuerpo de colisión (ancho, alto)
-
-    
-      this.boss.body.enable = true;
+        
+    // Habilitar y ajustar físicas
+    this.boss.body.enable = true;
     this.boss.body.setSize(120, 180);
-    // Deshabilitar físicas inicialmente
-
+    this.boss.body.setOffset(30, 20); // Ajustar según necesidad
 }
 
-
 createBossAnimations() {
-    // Animación de aparición
+    // Animación de aparición (frames 0-11 .webp)
     this.anims.create({
         key: 'boss_entrance',
         frames: Array.from({length: 12}, (_, i) => ({ key: `boss_${i}` })),
@@ -242,23 +237,23 @@ createBossAnimations() {
         repeat: 0
     });
 
-    // Animación idle (reposo)
+    // Animación idle/flotando (frames 12-18 .webp)
     this.anims.create({
         key: 'boss_idle',
-        frames: Array.from({length: 7}, (_, i) => ({ key: `boss_${i + 12}` })), // Asumiendo frames 12-18
+        frames: Array.from({length: 7}, (_, i) => ({ key: `boss_${i + 12}` })), // 12 a 18
         frameRate: 8,
-        repeat: 0 // Solo se reproduce una vez
+        repeat: -1 // Cambiado a loop infinito
     });
 
-    // Animación de ataque (usando los PNG)
+    // Animación de ataque (frames 0-16 .png)
     this.anims.create({
-        key: 'boss_attack',
-        frames: Array.from({length: 10}, (_, i) => ({ key: `boss_atk${i}` })),
+        key: 'boss_atk',
+        frames: Array.from({length: 17}, (_, i) => ({ key: `boss_atk${i}` })), // 0 a 16
         frameRate: 12,
         repeat: 0
     });
 
-    // Animación de muerte
+    // Animación de muerte (frames 11-0 .webp)
     this.anims.create({
         key: 'boss_death',
         frames: Array.from({length: 12}, (_, i) => ({ key: `boss_${11 - i}` })),
@@ -275,18 +270,20 @@ createBossAnimations() {
                 ease: 'Power2',
                 duration: 3000,
                 onComplete: () => {
-                    this.boss.play('boss_idle');
+                    this.boss.play('boss_idle'); // Iniciar ciclo idle/ataque
                 }
             });
         }
-        // Ciclo entre idle y ataque
-        if (anim.key === 'boss_idle') {
-            this.boss.play('boss_attack');
-        }
-        if (anim.key === 'boss_attack') {
-            this.boss.play('boss_idle');
+        // Ciclo entre ataque y idle
+        if (anim.key === 'boss_atk') {
+            this.time.delayedCall(1000, () => {
+                this.boss.play('boss_idle');
+            });
         }
     });
+
+    // Iniciar animación de aparición
+    this.boss.play('boss_entrance');
 }
 
 
@@ -300,7 +297,7 @@ createBossAnimations() {
         
         // Fondo
         this.bossHealthBar.fillStyle(0x444444);
-        this.bossHealthBar.fillRect(50, 50, 400, 30);
+        this.bossHealthBar.fillRect(100, 50, 400, 30);
         
         // Salud actual
         this.bossHealthBar.fillStyle(0xFF3300);
@@ -315,6 +312,8 @@ setupCollisions() {
     this.physics.add.collider(this.bombs, this.movingPlatforms);
     this.physics.add.collider(this.bombs, this.platforms);
     this.physics.add.collider(this.boss, this.platforms);
+   	this.physics.add.collider(this.playerBombs, this.platforms);
+    this.physics.add.collider(this.playerBombs, this.movingPlatforms);
 
     
     this.physics.add.overlap(this.player, this.powerups, this.collectPowerup, null, this);
@@ -323,17 +322,26 @@ setupCollisions() {
      this.physics.add.collider(this.powerups, this.platforms);
     this.physics.add.collider(this.powerups, this.movingPlatforms);
 
-    this.physics.add.overlap(this.bombs, this.boss, (bomb, boss) => {
-        if (this.bossInvulnerable || !boss.active) return;
 
-            bomb.disableBody(true, true); // ¡Falta esta línea!
-        this.cameras.main.shake(500, 0.02)
-        this.damageBoss(25);
-        
-        // Activar invulnerabilidad CORRECTAMENTE
-        this.bossInvulnerable = true;
-        this.time.delayedCall(500, () => this.bossInvulnerable = false);
+
+this.physics.add.overlap(this.playerBombs, this.boss, (bomb, boss) => {
+    if (!bomb.active || this.bossInvulnerable) return;
+    
+    this.damageBoss(50);
+    
+    // Efecto de invulnerabilidad
+    this.bossInvulnerable = true;
+    this.time.delayedCall(500, () => {
+        this.bossInvulnerable = false;
     });
+    
+    // Debug visual
+    this.boss.setTint(0xFF0000);
+    this.time.delayedCall(100, () => this.boss.clearTint());
+});
+
+
+    
 }
 
 
@@ -359,6 +367,7 @@ damageBoss(amount) {
 checkBossPhase() {
     // Verificar si ya está derrotado
     if (this.bossHealth <= 0) {
+    
         if (!this.gameOver) {
             // Forzar salud a 0 para evitar valores negativos
             this.bossHealth = 0;
@@ -368,7 +377,7 @@ checkBossPhase() {
     }
 
     // Fase 2 (600 de vida)
-    if (this.bossHealth <= 600 && this.currentPhase === 1) {
+    if (this.bossHealth <= 1000 && this.currentPhase === 1) {
         this.currentPhase = 2;
         console.log('¡Fase 2 activada!');
         this.startPhaseTwo();
@@ -387,12 +396,23 @@ checkBossPhase() {
 startPhaseTwo() {
     this.currentPhase = 2;
     
-    // Lanzar bombas sincronizadas con la animación de ataque
+    // Lanzar bombas durante el ataque
     this.boss.on('animationupdate', (anim, frame) => {
-        if (anim.key === 'boss_attack' && frame.index === 5) { // En el frame 5 del ataque
-            const bomb = this.bombs.create(this.boss.x, this.boss.y, 'bomb');
-            bomb.setVelocity(Phaser.Math.Between(-200, 200), -200);
+        if (anim.key === 'boss_atk' && frame.index === 9) { // Frame específico para disparar
+            const bomb = this.bombs.create(this.boss.x + 50, this.boss.y - 50, 'bomb');
+            bomb.setVelocity(Phaser.Math.Between(-300, 300), -250);
         }
+    });
+
+    // Programar ataques
+    this.time.addEvent({
+        delay: 3000, // Cada 3 segundos
+        callback: () => {
+            if (!this.gameOver) {
+                this.boss.play('boss_atk');
+            }
+        },
+        loop: true
     });
 }
 
@@ -473,13 +493,23 @@ this.physics.world.on('worldbounds', (body) => {
 if (this.player.y > 700) {
         this.handleFallDamage();
     }
+
+ if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+          this.throwBomb();
+      }
+      
+    this.isFacingLeft = this.cursors.left.isDown;
    
            console.log('Estado del jefe:',
     `Visible: ${this.boss.visible}`,
     `Salud: ${this.bossHealth}`,
     `Animación: ${this.boss.anims.currentAnim?.key}`
-);
+	);
 }//update
+
+
+
+
 
     handlePlayerMovement() {
         const isGrounded = this.player.body.touching.down;
@@ -506,6 +536,7 @@ if (this.player.y > 700) {
             this.player.setTexture('sprite12');
         }
     }
+
 
 animateWalk(start, end) {
     // Reiniciar el contador si cambia de dirección
@@ -546,9 +577,10 @@ animateJump(prefix, start, end) {
         bomb.setBounce(1).setVelocity(Phaser.Math.Between(-200, 200), 20);
     }
 
+
+
 hitBomb(player, bomb) {
     if (this.gameOver || this.isInvincible) { // Añade condición de invencibilidad
-        bomb.disableBody(true, true);
         return; // Salir sin aplicar daño
     }
     
@@ -560,13 +592,13 @@ hitBomb(player, bomb) {
         this.physics.pause();
         player.setTint(0xff0000);
         this.gameOver = true;
-        this.showGameOver();
     } else {
         player.setPosition(100, 450);
         player.setVelocity(0, 0);
         player.clearTint();
     }
 }
+
 
 defeatBoss() {
     console.log('¡Jefe derrotado!');
@@ -579,7 +611,7 @@ defeatBoss() {
     this.time.delayedCall(2000, () => {
         this.cameras.main.fadeOut(1000, 0, 0, 0);
     });
-}
+}//defeatBoss
 
 	setupScore() {
     this.scoreText = this.add.text(16, 16, 'Score: 0', { 
@@ -601,6 +633,8 @@ defeatBoss() {
 			if (isMovingLeft)	{	this.animateJump("jump_D", 0, 12);
 			}else if (isMovingRight) {	this.animateJump("jump_i", 0, 12);	}
 		}
+
+		
 
 	handleFallDamage() {
     if (this.gameOver) return;
@@ -664,7 +698,8 @@ setupPowerups() {
 
 
 collectPowerup(player, powerup) {
-    powerup.destroy();
+
+	powerup.destroy();
     this.isPowerUpActive = true;
     this.isInvincible = true; // Activar invencibilidad
     
@@ -680,6 +715,25 @@ collectPowerup(player, powerup) {
 }
 
 
+throwBomb() {
+    if (!this.canThrow) return;
+
+    const bomb = this.playerBombs.create(
+        this.player.x + (this.isFacingLeft ? -40 : 40),
+        this.player.y - 30,
+        this.isFacingLeft ? 'bomb_left' : 'bomb'
+    );
+
+    bomb.setScale(0.8);
+    bomb.setVelocityX(this.isFacingLeft ? -600 : 600);
+    bomb.setVelocityY(-300);
+    bomb.setGravityY(800);
+    bomb.setBounce(0.3);
+    
+    // Cooldown de 1 segundo
+    this.canThrow = false;
+    this.time.delayedCall(1000, () => this.canThrow = true);
+}
 
 
 }//clase
