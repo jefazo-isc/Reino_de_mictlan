@@ -30,10 +30,6 @@ class Level1 extends Phaser.Scene {
         this.load.image('ground3', 'assets/plat3.webp');
         this.load.image('ground4', 'assets/plat4.webp');
         this.load.image('star', 'assets/flor.png');
-        this.load.audio('musicaFondo', '../assets/sonido/MusicaAzteca.mp3');
-        this.load.audio('fuego', '../assets/sonido/fire_ball.wav');
-        this.load.audio('collect', '../assets/sonido/collect.wav');
-        this.load.audio('hurt', '../assets/sonido/hurt_male.wav');
 
         // Bolas de fuego
         for (let i = 1; i <= 4; i++) {
@@ -53,8 +49,6 @@ class Level1 extends Phaser.Scene {
         this.setupBombs();
         this.setupCollisions();
         this.setupScore();
-        const musica = this.sound.add('musicaFondo', { loop: true });
-        musica.play();
 
         // Configuración de patrones de bolas
         this.patternIndex = 0;
@@ -84,14 +78,7 @@ class Level1 extends Phaser.Scene {
             loop: true
         });
 
-        // Cambiar a la escena Puente después de 5 segundos
-        this.time.delayedCall(5000, () => {
-            // Guardar el score en globalData antes de cambiar de escena
-            globalData.score = this.score;
-            this.scene.start('Puente');
-        });
-
-        // Crear animación de bolas de fuego
+        // Animación de bolas de fuego
         this.anims.create({
             key: 'bolaAnim',
             frames: [
@@ -105,7 +92,7 @@ class Level1 extends Phaser.Scene {
         });
 
         // Transición a Puente
-        this.time.delayedCall(50000, () => {
+        this.time.delayedCall(20000, () => {
             window.globalData.score = this.score;
             this.scene.start('Puente');
         });
@@ -162,14 +149,12 @@ class Level1 extends Phaser.Scene {
     }
 
     spawnBombs() {
-        const positions = this.patterns[this.patternIndex]; // Usar el patrón actual
-        for (let i = 0; i < positions.length; i++) {
+        const positions = this.patterns[this.patternIndex];
+        positions.forEach((pos, i) => {
             this.time.delayedCall(i * 200, () => {
                 const x = pos + Phaser.Math.Between(-20, 20);
                 const bomb = this.bombs.create(x, 0, 'bola1');
-                bomb.setVelocityY(90); // Velocidad ajustada a 90
-                bomb.setBounce(0);
-                bomb.play('bolaAnim');
+                bomb.setVelocityY(90).play('bolaAnim');
             });
         });
     }
@@ -215,9 +200,7 @@ class Level1 extends Phaser.Scene {
         star.disableBody(true, true);
         this.score += 10;
         this.scoreText.setText(`Score: ${this.score}`);
-        
-        // Actualizar el score global
-        globalData.score = this.score;
+        window.globalData.score = this.score;
 
         if (this.stars.countActive(true) === 0) {
             this.stars.children.iterate(child => child.enableBody(true, child.x, 0, true, true));
@@ -227,7 +210,6 @@ class Level1 extends Phaser.Scene {
     hitBomb(player, bomb) {
         bomb.disableBody(true, true);
         this.vidas.vidaperdida();
-        this.sound.play('hurt');
 
         if (this.vidas.vidas > 0) {
             player.setTint(0xff0000);
@@ -239,9 +221,7 @@ class Level1 extends Phaser.Scene {
             this.physics.pause();
             player.setTint(0xff0000);
             this.gameOver = true;
-            
-            // Actualizar score global antes de ir a GameOver
-            globalData.score = this.score;
+            window.globalData.score = this.score;
             this.scene.start('GameOver');
         }
     }
