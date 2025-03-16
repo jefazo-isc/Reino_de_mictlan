@@ -17,6 +17,7 @@ class FinalLevel extends Phaser.Scene {
     }
 
     preload() {
+    
         // Cargar assets base
 
         
@@ -27,24 +28,25 @@ class FinalLevel extends Phaser.Scene {
        	this.load.image('powerup', 'assets/powerup.png'); // Asegúrate de tener esta imagen
 
         // Cargar sprites del jugador
-        for (let i = 0; i <= 25; i++) {
-            this.load.image(`sprite${i}`, `assets/sprites/sprite (${i}).png`);
+        for (let i = 1; i < 25; i++) {
+            this.load.image(`sprite${i}`, `assets/caminarp1/caminar(${i}).png`);
         }
+
 
         // Cargar sprites de salto
         for (let i = 0; i <= 12; i++) {
-            this.load.image(`jump_i${i}`, `assets/jump/jump_i (${i}).png`);
-            this.load.image(`jump_D${i}`, `assets/jump/jump_D (${i}).png`);
+            this.load.image(`jump_i${i}`, `assets/caminarp1/saltoi(${i}).png`);
+            this.load.image(`jump_D${i}`, `assets/caminarp1/saltod(${i}).png`);
         }
 
 
-
- for (let i = 0; i < 19; i++) {
-        this.load.image(`boss_${i}`, `assets/sprites/boss/${i}.webp`);
+	 for (let i = 0; i < 19; i++) {
+        this.load.image(`boss_${i}`, `assets/caminarp1/boss/${i}.webp`);
     }
+    
 
-     for (let i = 0; i < 19; i++) {
-        this.load.image(`boss_${i}`, `assets/sprites/boss/${i}.webp`);
+   	for (let i = 0; i < 19; i++) {
+   		this.load.image(`boss_${i}`, `assets/caminarp1/boss/${i}.png`);
     }
 		
 
