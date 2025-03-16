@@ -12,6 +12,8 @@ class FinalLevel extends Phaser.Scene {
         this.jumpForce = -330;
         this.lastDirection = '';
 		this.bossInvulnerable = false;
+		this.isPowerUpActive = false;
+    	this.powerUpTime = 0;
     }
 
     preload() {
@@ -21,8 +23,8 @@ class FinalLevel extends Phaser.Scene {
         this.load.image('xibalba_bg', 'assets/a.jpeg');
         this.load.image('ground', 'assets/piso2.png');
         this.load.image('ground2', 'assets/piso.webp');
-        this.load.image('star', 'assets/star.png');
         this.load.image('bomb', 'assets/bomb.png');
+       	this.load.image('powerup', 'assets/powerup.png'); // Asegúrate de tener esta imagen
 
         // Cargar sprites del jugador
         for (let i = 0; i <= 25; i++) {
@@ -38,6 +40,10 @@ class FinalLevel extends Phaser.Scene {
 
 
  for (let i = 0; i < 19; i++) {
+        this.load.image(`boss_${i}`, `assets/sprites/boss/${i}.webp`);
+    }
+
+     for (let i = 0; i < 19; i++) {
         this.load.image(`boss_${i}`, `assets/sprites/boss/${i}.webp`);
     }
 		
@@ -72,10 +78,6 @@ class FinalLevel extends Phaser.Scene {
     
         // Fondo y texto
         this.add.image(400, 330, 'xibalba_bg');
-        this.add.text(300, 50, 'XIBALBÁ: EL INFIERNO MAYA', {
-            fontSize: '32px',
-            fill: '#FF3300'
-        });
 
         // Plataformas
         this.setupPlatforms();
@@ -84,12 +86,13 @@ class FinalLevel extends Phaser.Scene {
         this.setupPlayer();
         
         // Objetos
-        this.setupStars();
         this.setupBombs();
         
         // Jefe
         this.setupBoss();
         
+   		this.powerups = this.physics.add.group();
+   		this.setupPowerups();
         // Colisiones
         this.setupCollisions();
         
@@ -118,7 +121,7 @@ setupPlatforms() {
     this.platforms = this.physics.add.staticGroup();
 
     // Suelo fijo
-    this.platforms.create(300, 595, 'ground').setScale(1).refreshBody();
+    this.platforms.create(100, 595, 'ground').setScale(1).refreshBody();
 
     // Grupo de plataformas móviles (dinámicas)
     this.movingPlatforms = this.physics.add.group({
@@ -128,10 +131,9 @@ setupPlatforms() {
 
     // Plataformas móviles con diferentes tamaños y movimientos
     const movingPlatformsData = [
-        { x: 100, y: 500, key: 'ground2', scaleX: 1, moveX: 150, moveY: 0 },  // Horizontal
-        { x: 1100, y: 100, key: 'ground2', scaleX: 1, moveX: 0, moveY: 510 }, // Horizontal más larga
-        { x: 300, y: 300, key: 'ground2', scaleX: 0.8, moveX: 0, moveY: 100 }, // Vertical
-        { x: 650, y: 200, key: 'ground2', scaleX: 1.2, moveX: 0, moveY: 120 }, // Otra vertical
+        { x: 1100, y: 100, key: 'ground', scaleX: 1, moveX: 0, moveY: 510 }, //elevador
+        { x: 250, y: 355, key: 'ground2', scaleX: 0.8, moveX: 100, moveY: 0 }, // Vertical
+        { x: 600, y: 50, key: 'ground2', scaleX: 1.2, moveX: 120, moveY: 0 }, // Otra vertical
     ];
 
     movingPlatformsData.forEach(data => {
@@ -145,7 +147,7 @@ setupPlatforms() {
             x: platform.x + data.moveX,  // Movimiento horizontal
             y: platform.y + data.moveY,  // Movimiento vertical
             ease: 'Linear',
-            duration: 3000,
+            duration: 13000,
             yoyo: true,
             repeat: -1
         });
@@ -174,20 +176,41 @@ setupPlatforms() {
        
     }//setupPlayer
 
-    setupStars() {
-        this.stars = this.physics.add.group({
-            key: 'star',
-            repeat: 11,
-            setXY: { x: 12, y: 0, stepX: 70 }
-        });
 
-        this.stars.children.iterate(child => {
-            child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
-        });
-    }
 
     setupBombs() {
         this.bombs = this.physics.add.group();
+        
+        // Evento para generar bombas cada 5 segundos
+        this.time.addEvent({
+            delay: 5000, // 5000 ms = 5 segundos
+            callback: () => {
+                // Generar en posición aleatoria en el área visible (ajustar según tu tamaño de juego)
+                const x = Phaser.Math.Between(50, 750);
+                const y = 16; // Parte superior
+                
+                // Crear bomba con física
+                const bomb = this.bombs.create(x, y, 'bomb');
+                bomb.setBounce(1);
+                bomb.setCollideWorldBounds(true);
+                
+                // Velocidad aleatoria en X y Y
+                bomb.setVelocity(
+                    Phaser.Math.Between(-200, 200), // Velocidad horizontal
+                    Phaser.Math.Between(50, 200) // Velocidad vertical (hacia abajo)
+                );
+                
+                // Añadir efecto de rotación
+                this.tweens.add({
+                    targets: bomb,
+                    angle: 360,
+                    duration: 1000,
+                    repeat: -1
+                });
+            },
+            callbackScope: this,
+            loop: true
+        });
     }
 
 setupBoss() {
@@ -204,6 +227,7 @@ setupBoss() {
     // Deshabilitar físicas inicialmente
     this.boss.body.enable = false;
 }
+
 
 createBossAnimations() {
     // Animación de aparición (usando frames 0-11)
@@ -283,14 +307,16 @@ setupCollisions() {
 
 	this.physics.add.collider(this.player, this.movingPlatforms);
     this.physics.add.collider(this.player, this.platforms);
-    this.physics.add.collider(this.stars, this.platforms);
-    this.physics.add.collider(this.stars, this.movingPlatforms);
     this.physics.add.collider(this.bombs, this.movingPlatforms);
     this.physics.add.collider(this.bombs, this.platforms);
     this.physics.add.collider(this.boss, this.platforms);
 
-    this.physics.add.overlap(this.player, this.stars, this.collectStar, null, this);
+    
+    this.physics.add.overlap(this.player, this.powerups, this.collectPowerup, null, this);
     this.physics.add.collider(this.player, this.bombs, this.hitBomb, null, this);
+
+     this.physics.add.collider(this.powerups, this.platforms);
+    this.physics.add.collider(this.powerups, this.movingPlatforms);
 
     this.physics.add.overlap(this.bombs, this.boss, (bomb, boss) => {
         if (this.bossInvulnerable || !boss.active) return;
@@ -374,8 +400,6 @@ checkBossPhase() {
         this.time.addEvent({
             delay: 1000,
             callback: () => {
-                const star = this.stars.create(this.boss.x, this.boss.y, 'star');
-                star.setVelocity(Phaser.Math.Between(-300, 300), Phaser.Math.Between(-300, 300));
             },
             loop: true
         });
@@ -426,6 +450,13 @@ checkBossPhase() {
         this.boss.rotation += 0.02; // Efecto visual de enfurecimiento
     }
 
+
+  if(this.isPowerUpActive && this.time.now > this.powerUpTime) {
+        this.isPowerUpActive = false;
+        this.isInvincible = false; // Desactivar invencibilidad
+        this.player.clearTint();
+        this.playerSpeed = 160;
+    }
 
 this.physics.world.on('worldbounds', (body) => {
     if (body.gameObject === this.player) {
@@ -502,22 +533,6 @@ animateJump(prefix, start, end) {
     this.frameDelay++;
 }
 
-    collectStar(player, star) {
-        star.disableBody(true, true);
-        this.score += 10;
-        this.scoreText.setText(`Score: ${this.score}`);
-
-        if (this.stars.countActive(true) === 0) {
-            this.resetStars();
-            this.spawnBomb();
-        }
-    }
-
-    resetStars() {
-        this.stars.children.iterate(child => {
-            child.enableBody(true, child.x, 0, true, true);
-        });
-    }
 
     spawnBomb() {
         const x = this.player.x < 400 
@@ -529,9 +544,12 @@ animateJump(prefix, start, end) {
     }
 
 hitBomb(player, bomb) {
-    if (this.gameOver) return;
+    if (this.gameOver || this.isInvincible) { // Añade condición de invencibilidad
+        bomb.disableBody(true, true);
+        return; // Salir sin aplicar daño
+    }
     
-    bomb.disableBody(true, true);
+    // Resto del código original para cuando NO es invencible
     globalData.lives--;
     this.livesText.setText(`Lives: ${globalData.lives}`);
     
@@ -541,7 +559,6 @@ hitBomb(player, bomb) {
         this.gameOver = true;
         this.showGameOver();
     } else {
-        // Reseteo seguro del jugador
         player.setPosition(100, 450);
         player.setVelocity(0, 0);
         player.clearTint();
@@ -609,6 +626,63 @@ defeatBoss() {
         });
     }
 }
+
+
+setupPowerups() {
+    // Generar power-up cada 10-15 segundos
+    this.time.addEvent({
+        delay: Phaser.Math.Between(10000, 15000),
+        callback: () => {
+            const platform = Phaser.Math.RND.pick([
+                ...this.platforms.getChildren(), 
+                ...this.movingPlatforms.getChildren()
+            ]);
+            
+            const powerup = this.powerups.create(platform.x, platform.y - 30, 'powerup');
+            
+            // Ajustar el tamaño aquí
+            powerup.setScale(0.05)
+            powerup.body.setSize(
+                powerup.width * 0.5, // Ancho ajustado
+                powerup.height * 0.5 // Alto ajustado
+            );
+            
+            powerup.body.setAllowGravity(false);
+            powerup.body.setImmovable(true);
+            
+            // Si la plataforma es móvil
+            if (platform.body.moves) {
+                this.tweens.add({
+                    targets: powerup,
+                    x: platform.x + platform.body.velocity.x,
+                    y: platform.y + platform.body.velocity.y - 30,
+                    duration: 50,
+                    repeat: -1
+                });
+            }
+        },
+        loop: true
+    });
+}
+
+
+collectPowerup(player, powerup) {
+    powerup.destroy();
+    this.isPowerUpActive = true;
+    this.isInvincible = true; // Activar invencibilidad
+    
+    // Efectos visuales
+    player.setTint(0x00FF00); // Tinte verde
+    this.playerSpeed *= 1.5;
+    
+    // Temporizador para duración del powerup
+    this.powerUpTime = this.time.now + 10000; // 10 segundos
+    
+    // Sonido opcional
+    // this.sound.play('powerup_sound');
+}
+
+
 
 
 }//clase
