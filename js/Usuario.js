@@ -5,11 +5,19 @@ class Usuario extends Phaser.Scene {
 
     preload() {
         this.load.image('sky', '../assets/sky.webp');
+        this.load.audio('musicaFondo', '../assets/sonido/menuMusica.mp3');
     }
 
     create() {
 
         this.add.image(400, 300, 'sky');
+        const musica = this.sound.add('musicaFondo', { loop: true });
+        if (globalData.musica === false) {
+            musica.play();
+            musica.pause();
+        }else{
+            musica.play();
+        }
         
         let aliasString = '';
 
@@ -159,6 +167,39 @@ class Usuario extends Phaser.Scene {
             ease: 'Linear',
             yoyo: true,
             repeat: -1
+        });
+
+        const musicaBotton = this.add.text(640, 470, 'Musica', {
+            fontSize: '30px',
+            padding: { left: 5, right: 5, top: 5, bottom: 5 },
+            fontFamily: 'Mayan',
+            fill: '#fbc54e',
+            strokeThickness: 6,
+            stroke: '#1d0010'
+        })
+        .setInteractive()
+        .on('pointerdown', () => {
+            if (globalData.musica === true) {
+                musica.pause();
+                globalData.musica = false;
+            } else {
+                musica.resume();
+                globalData.musica = true;
+            }
+        })
+        .on('pointerover', () => {
+            this.tweens.add({
+                targets: musicaBotton,
+                alpha: 0,
+                duration: 500,
+                ease: 'Linear',
+                yoyo: true,
+                repeat: -1
+            });
+        })
+        .on('pointerout', () => {
+            this.tweens.killTweensOf(musicaBotton);
+            musicaBotton.alpha = 1;
         });
     }
 };

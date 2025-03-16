@@ -71,6 +71,9 @@ function dibujar() {
 const canvas = document.getElementById('canva-container');
 
 dibujar();
+const musica = new Audio('../assets/sonido/menuMusica.mp3'); // Ajusta la ruta
+    musica.play();
+    musica.pause();
 
 const volverButton = document.createElement('button');
 volverButton.textContent = 'Volver';
@@ -100,6 +103,32 @@ volverButton.addEventListener('click', () => {
 });
 document.body.appendChild(volverButton);
 
+// Botón de música
+const musicaButton = document.createElement('button');
+musicaButton.textContent = 'Musica';
+musicaButton.style.position = 'absolute';
+musicaButton.style.top = offsetY + 'px';
+musicaButton.style.left = 'calc(50% + 80px)';  // Ajusta según necesites
+musicaButton.style.fontSize = '20px';
+musicaButton.style.padding = '10px 20px';
+musicaButton.style.cursor = 'pointer';
+musicaButton.style.backgroundColor = '#d97f29';
+musicaButton.style.color = '#661b06';
+musicaButton.style.border = '2px solid #661b06';
+musicaButton.style.borderRadius = '5px';
+musicaButton.style.fontFamily = 'Mayan';
+musicaButton.style.fontWeight = 'bold';
+document.body.appendChild(musicaButton);
+
+// Al hacer clic, pausar/reanudar
+musicaButton.addEventListener('click', () => {
+    if (musica.paused) {
+        musica.play();
+    } else {
+        musica.pause();
+    }
+});
+
 // Para pocionar el boton
 function posicionarBoton() {
     const canvasRect = canvas.getBoundingClientRect();
@@ -115,3 +144,14 @@ posicionarBoton();
 
 // El boton se acomoda de nuevo
 window.addEventListener('resize', posicionarBoton);
+
+// Ajuste de posición al redimensionar la ventana
+function reubicarBotones() {
+    posicionarBoton(); // reposiciona botón Volver
+    const canvasRect = canvas.getBoundingClientRect();
+    const scale = canvasRect.height / canvas.height;
+    const offsetY = canvasRect.top + (500 * scale) + 20;
+    musicaButton.style.top = offsetY + 'px';
+    musicaButton.style.left = 'calc(50% + 80px)';
+}
+window.addEventListener('resize', reubicarBotones);

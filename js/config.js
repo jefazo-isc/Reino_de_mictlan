@@ -2,7 +2,10 @@
 const globalData = {
     score: 0,
     lives: 3,
-    currentLevel: 1
+    currentLevel: 1,
+    alias: "",
+    registrado: "",
+    musica: true,
 };
 
 // Configuración del juego
