@@ -208,6 +208,9 @@ class Level1 extends Phaser.Scene {
         const neutralFrame = this.characterPrefix === 'p1' ? 'caminar1' : 'caminar13';
         this.player = this.physics.add.sprite(100, 450, neutralFrame);
         this.player.setCollideWorldBounds(true);
+        if (!this.player.body) {
+            console.error('Player body not created properly');
+        }
         this.cursors = this.input.keyboard.createCursorKeys();
         this.currentFrame = this.characterPrefix === 'p1' ? 1 : 13;
         this.jumpFrame = 0;
@@ -258,7 +261,7 @@ class Level1 extends Phaser.Scene {
     }
 
     update() {
-        if (this.gameOver || this.isPaused) return;
+        if (this.gameOver || this.isPaused || !this.player || !this.player.body) return;
 
         const isJumping = this.cursors.up.isDown && this.player.body.touching.down;
         const isMovingRight = this.cursors.right.isDown;
