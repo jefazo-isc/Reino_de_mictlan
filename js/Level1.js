@@ -9,6 +9,7 @@ class Level1 extends Phaser.Scene {
         const selectedChar = window.globalData.selectedCharacter;
         this.characterPrefix = selectedChar.replace('character', 'p'); // Convierte "character1" a "p1"
 
+        this.load.image('parado', `assets/caminar${this.characterPrefix}/Parado.png`); // Nueva línea
         // 2. Cargar assets según personaje seleccionado
         // Caminar (24 frames: 1-12 izquierda, 13-24 derecha)
         for (let i = 1; i <= 24; i++) {
