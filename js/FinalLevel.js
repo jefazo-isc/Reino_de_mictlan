@@ -34,7 +34,7 @@ class FinalLevel extends Phaser.Scene {
 
 
         // Cargar sprites de salto
-        for (let i = 0; i <= 12; i++) {
+        for (let i = 1; i <= 12; i++) {
             this.load.image(`jump_i${i}`, `assets/caminarp1/saltoi(${i}).png`);
             this.load.image(`jump_D${i}`, `assets/caminarp1/saltod(${i}).png`);
         }
@@ -46,7 +46,7 @@ class FinalLevel extends Phaser.Scene {
     
 
    	for (let i = 0; i < 19; i++) {
-   		this.load.image(`boss_${i}`, `assets/caminarp1/boss/${i}.png`);
+   		this.load.image(`boss_atk${i}`, `assets/caminarp1/boss/${i}.png`);
     }
 		
 
@@ -224,15 +224,17 @@ setupBoss() {
         .setDepth(1);
 
     // Ajustar tamaño del cuerpo de colisión (ancho, alto)
-    this.boss.body.setSize(120, 180);
+
     
+      this.boss.body.enable = true;
+    this.boss.body.setSize(120, 180);
     // Deshabilitar físicas inicialmente
-    this.boss.body.enable = false;
+
 }
 
 
 createBossAnimations() {
-    // Animación de aparición (usando frames 0-11)
+    // Animación de aparición
     this.anims.create({
         key: 'boss_entrance',
         frames: Array.from({length: 12}, (_, i) => ({ key: `boss_${i}` })),
@@ -240,50 +242,51 @@ createBossAnimations() {
         repeat: 0
     });
 
-    // Animación idle (frames 12-18)
+    // Animación idle (reposo)
     this.anims.create({
         key: 'boss_idle',
-        frames: Array.from({length: 7}, (_, i) => ({ key: `boss_${i + 12}` })),
+        frames: Array.from({length: 7}, (_, i) => ({ key: `boss_${i + 12}` })), // Asumiendo frames 12-18
         frameRate: 8,
-        repeat: -1
+        repeat: 0 // Solo se reproduce una vez
     });
 
-    // Animación de ataque (frames 7-11)
+    // Animación de ataque (usando los PNG)
     this.anims.create({
         key: 'boss_attack',
-        frames: Array.from({length: 5}, (_, i) => ({ key: `boss_${i + 7}` })),
+        frames: Array.from({length: 10}, (_, i) => ({ key: `boss_atk${i}` })),
         frameRate: 12,
         repeat: 0
     });
 
-
-  this.anims.create({
+    // Animación de muerte
+    this.anims.create({
         key: 'boss_death',
-        frames: Array.from({length: 12}, (_, i) => ({ 
-            key: `boss_${11 - i}` // Invertimos el orden (11-0)
-        })),
+        frames: Array.from({length: 12}, (_, i) => ({ key: `boss_${11 - i}` })),
         frameRate: 10,
         repeat: 0
     });
 
-
-  // Cuando termina la animación de entrada, elevamos el jefe hasta su posición final
+    // Configurar ciclo de animaciones
     this.boss.on('animationcomplete', (anim) => {
         if (anim.key === 'boss_entrance') {
-            // Tween para elevar al jefe (de groundY a 300, por ejemplo)
             this.tweens.add({
                 targets: this.boss,
-                y: 300, // posición final deseada
+                y: 300,
                 ease: 'Power2',
                 duration: 3000,
                 onComplete: () => {
-                    
                     this.boss.play('boss_idle');
                 }
             });
         }
-    });    
-    this.boss.play('boss_entrance');
+        // Ciclo entre idle y ataque
+        if (anim.key === 'boss_idle') {
+            this.boss.play('boss_attack');
+        }
+        if (anim.key === 'boss_attack') {
+            this.boss.play('boss_idle');
+        }
+    });
 }
 
 
@@ -381,19 +384,17 @@ checkBossPhase() {
     console.log(`FASE: ${this.currentPhase} | SALUD: ${this.bossHealth} | ENFURECIDO: ${this.isEnraged}`);
 }
 
-    startPhaseTwo() {
-        this.currentPhase = 2;
-        this.boss.setVelocityX(100);
-        
-        this.time.addEvent({
-            delay: 2000,
-            callback: () => {
-                const bomb = this.bombs.create(this.boss.x, this.boss.y, 'bomb');
-                bomb.setVelocity(Phaser.Math.Between(-200, 200), -200);
-            },
-            loop: true
-        });
-    }
+startPhaseTwo() {
+    this.currentPhase = 2;
+    
+    // Lanzar bombas sincronizadas con la animación de ataque
+    this.boss.on('animationupdate', (anim, frame) => {
+        if (anim.key === 'boss_attack' && frame.index === 5) { // En el frame 5 del ataque
+            const bomb = this.bombs.create(this.boss.x, this.boss.y, 'bomb');
+            bomb.setVelocity(Phaser.Math.Between(-200, 200), -200);
+        }
+    });
+}
 
     startEnragedPhase() {
         this.isEnraged = true;
@@ -570,12 +571,7 @@ hitBomb(player, bomb) {
 defeatBoss() {
     console.log('¡Jefe derrotado!');
     this.gameOver = true;
-    
-    // Solo detener movimientos
-    this.boss.body.setVelocity(0);
-    
-    // Animación de muerte
-    this.boss.play('boss_death');
+    this.boss.play('boss_death'); // Usar la clave correcta
     
     // Efecto visual
     this.boss.setTint(0xFF0000);
@@ -584,7 +580,6 @@ defeatBoss() {
         this.cameras.main.fadeOut(1000, 0, 0, 0);
     });
 }
-
 
 	setupScore() {
     this.scoreText = this.add.text(16, 16, 'Score: 0', { 
