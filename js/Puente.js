@@ -10,6 +10,10 @@ class Puente extends Phaser.Scene {
         this.load.image('ground', 'assets/piso.webp');
         this.load.image('ground4', 'assets/plat4.webp');
         this.load.image('lanzas', 'assets/Lanza.png');
+        this.load.audio('hurt', '../assets/sonido/hurt_male.wav');
+        this.load.audio('lanza', '../assets/sonido/lanza.wav');
+        this.load.audio('musicaFondo', '../assets/sonido/MusicaAzteca.mp3');
+
 
         // Cargar sprites dinámicos
         const assets = [
@@ -32,6 +36,8 @@ class Puente extends Phaser.Scene {
 
         // Fondo
         this.add.image(400, 300, 'Puente');
+        const musica = this.sound.add('musicaFondo', { loop: true });
+        musica.play();
 
         // Vidas
         this.vidas = new Vidas(this, 90, 70);
@@ -142,6 +148,7 @@ class Puente extends Phaser.Scene {
         lanza.rotation = direction.rotation;
 
         lanza.setBounce(0);
+        this.sound.play('lanza');
     }
 
     clavarLanza(lanza, platform) {
@@ -198,7 +205,9 @@ class Puente extends Phaser.Scene {
 
     endLevel() {
         this.gameOver = true;
+        musica.stop();
         this.scene.start('FinalLevel', { score: this.score, lanzas: this.lanzasRecogidas });
+        
     }
 
     update() {
@@ -238,6 +247,7 @@ class Puente extends Phaser.Scene {
         if (!this.lanzasClavadas.contains(lanza)) { // Solo si la lanza no está clavada
             lanza.disableBody(true, true);
             this.vidas.vidaperdida();
+            this.sound.play('hurt');
     
             if (this.vidas.vidas > 0) {
                 player.setTint(0xff0000);

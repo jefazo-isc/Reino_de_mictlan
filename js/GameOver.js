@@ -5,6 +5,8 @@ class GameOver extends Phaser.Scene {
 
     preload() {
         this.load.image('lose', '../assets/lose.webp');
+        this.load.audio('lose_sound', '../assets/sonido/you_lose.mp3');
+        this.load.audio('loseMusic', '../assets/sonido/lose_music.m4a');
     }
 
     create() {
@@ -98,6 +100,20 @@ class GameOver extends Phaser.Scene {
         .on('pointerout', () => {
             this.tweens.killTweensOf(volverButton);
             volverButton.alpha = 1;
+        });
+        this.time.addEvent({
+            delay: 4000,
+            callback: () => {
+                this.sound.play('lose_sound');
+            },
+            loop: false
+        });
+        this.time.addEvent({
+            delay: 500,
+            callback: () => {
+                this.sound.play('loseMusic');
+            },
+            loop: false
         });
 
         // Verificamos si ya esta el alias en el localStorage
