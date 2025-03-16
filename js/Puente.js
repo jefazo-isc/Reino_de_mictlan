@@ -187,6 +187,12 @@ class Puente extends Phaser.Scene {
             });
             
             console.log("Lanza recogida. Total munición:", this.lanzasRecogidas);
+            
+            // Verificar si se han recogido 12 lanzas para pasar al nivel final
+            if (this.lanzasRecogidas >= 12) {
+                console.log("¡12 lanzas recogidas! Pasando al nivel final");
+                this.endLevel();
+            }
         }
     }
 
