@@ -6,6 +6,7 @@ const globalData = {
     alias: "",
     registrado: "",
     musica: true,
+    selectedCharacter: null
 };
 
 // Configuración del juego

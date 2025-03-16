@@ -13,6 +13,11 @@ class MainMenu extends Phaser.Scene {
         }else{
             musica.play();
         }
+        globalData.score = 0;
+        globalData.vidas = 3;
+        globalData.alias = '';
+        globalData.selectedCharacter = null;
+        globalData.registrado = '';
         
 
         const title = this.add.text(125, 50, 'REINO DE MICTLÁN', {

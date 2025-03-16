@@ -1,12 +1,11 @@
 class Level1 extends Phaser.Scene {
     constructor() {
         super({ key: 'Level1' });
-        this.characterPrefix = 'p1'; // Valor por defecto
     }
 
     preload() {
         // 1. Determinar prefijo del personaje seleccionado
-        const selectedChar = window.globalData.selectedCharacter;
+        const selectedChar = globalData.selectedCharacter;
         this.characterPrefix = selectedChar.replace('character', 'p'); // Convierte "character1" a "p1"
 
         this.load.image('parado', `assets/caminar${this.characterPrefix}/Parado.png`); // Nueva línea
@@ -44,7 +43,7 @@ class Level1 extends Phaser.Scene {
 
     create() {
         // Inicialización del juego
-        this.score = window.globalData.score || 0;
+        this.score = globalData.score || 0;
         this.gameOver = false;
         this.add.image(400, 300, 'sky');
         this.vidas = new Vidas(this, 90, 70);
@@ -210,7 +209,7 @@ class Level1 extends Phaser.Scene {
         this.score += 10;
         this.scoreText.setText(`Score: ${this.score}`);
         this.sound.play('collect');
-        window.globalData.score = this.score;
+        globalData.score = this.score;
 
         if (this.stars.countActive(true) === 0) {
             this.stars.children.iterate(child => child.enableBody(true, child.x, 0, true, true));
@@ -232,8 +231,8 @@ class Level1 extends Phaser.Scene {
             this.physics.pause();
             player.setTint(0xff0000);
             this.gameOver = true;
-            window.globalData.score = this.score;
-            this.scene.start('GameOver');
+            globalData.score = this.score;
+            this.scene.start('GameOver', globalData);
         }
     }
 }

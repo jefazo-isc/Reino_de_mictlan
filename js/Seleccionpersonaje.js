@@ -1,7 +1,6 @@
 class Seleccionpersonaje extends Phaser.Scene {
     constructor() {
         super({ key: 'Seleccionpersonaje' });
-        this.selectedCharacter = null;
     }
 
     preload() {
@@ -81,7 +80,7 @@ class Seleccionpersonaje extends Phaser.Scene {
             if (gameObject.x > 325 && gameObject.x < 475 && 
                 gameObject.y > 225 && gameObject.y < 375) {
                 
-                this.selectedCharacter = gameObject.texture.key;
+                globalData.selectedCharacter = gameObject.texture.key;
                 this.emptyBoxText.setVisible(false);
                 
                 // Posicionar correctamente
@@ -119,15 +118,15 @@ class Seleccionpersonaje extends Phaser.Scene {
     }
 
     startGame() {
-        if (!this.selectedCharacter) return;
+        if (globalData.selectedCharacter === null) return;
         
-        window.globalData = {
-            selectedCharacter: this.selectedCharacter
-        };
+        /*window.globalData = {
+            selectedCharacter: selectedCharacter
+        };*/
         
-        this.cameras.main.fade(500, 0, 0, 0);
-        this.cameras.main.once('camerafadeoutcomplete', () => {
-            this.scene.start('Historia1');
+            this.cameras.main.fade(500, 0, 0, 0);
+            this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start('Historia1', globalData);
         });
     }
 }

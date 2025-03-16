@@ -63,7 +63,7 @@ class Historia1 extends Phaser.Scene {
         }).setOrigin(0.5).setInteractive().setDepth(5); // Mostrar sobre todo lo demás
 
         continueButton.on('pointerdown', () => {
-            this.scene.start('Level1', { score: globalData.score });
+            this.scene.start('Level1', globalData);
         });
 
         // Animación del botón (similar a Usuario.js)

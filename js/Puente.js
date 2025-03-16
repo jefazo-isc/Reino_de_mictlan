@@ -1,12 +1,11 @@
 class Puente extends Phaser.Scene {
     constructor() {
         super({ key: 'Puente' });
-        this.characterPrefix = 'p1';
     }
 
     preload() {
         // 1. Determinar prefijo del personaje
-        const selectedChar = window.globalData.selectedCharacter;
+        const selectedChar = globalData.selectedCharacter;
         this.characterPrefix = selectedChar.replace('character', 'p');
 
         // 2. Cargar assets del personaje
@@ -36,7 +35,7 @@ class Puente extends Phaser.Scene {
     }
 
     create() {
-        this.score = window.globalData.score || 0;
+        this.score = globalData.score || 0;
         this.gameOver = false;
         this.lanzasRecogidas = 0;
 
@@ -166,7 +165,7 @@ class Puente extends Phaser.Scene {
     endLevel() {
         this.gameOver = true;
         this.musica.stop();
-        window.globalData.score = this.score;
+        globalData.score = this.score;
         this.scene.start('FinalLevel', { 
             score: this.score,
             lanzas: this.lanzasRecogidas 
@@ -218,8 +217,8 @@ class Puente extends Phaser.Scene {
                 this.physics.pause();
                 player.setTint(0xff0000);
                 this.gameOver = true;
-                window.globalData.score = this.score;
-                this.scene.start('GameOver');
+                globalData.score = this.score;
+                this.scene.start('GameOver', globalData);
             }
         }
     }
