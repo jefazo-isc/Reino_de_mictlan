@@ -6,6 +6,7 @@ class FinalLevel extends Phaser.Scene {
         this.bossHealth = 1000;
         this.currentPhase = 1;
         this.isEnraged = false;
+        this.bossInvulnerable = false;
         
         // Variables del jugador
         this.playerSpeed = 160;
@@ -17,32 +18,32 @@ class FinalLevel extends Phaser.Scene {
     }
 
     preload() {
-        // Optimización: usar spritesheets en lugar de imágenes individuales
+        // 1. Determinar prefijo del personaje
+        this.characterPrefix = globalData.selectedCharacter === 'character1' ? 'p1' : 'p2';
+        
+        // 2. Cargar assets del personaje
+        // Caminar (24 frames)
+        for (let i = 1; i <= 24; i++) {
+            this.load.image(`caminar${i}`, `assets/caminar${this.characterPrefix}/caminar(${i}).png`);
+        }
+        
+        // Saltos (12 frames por dirección)
+        for (let i = 1; i <= 9; i++) {
+            this.load.image(`saltoi${i}`, `assets/jump${this.characterPrefix}/saltoi(${i}).png`);
+            this.load.image(`saltod${i}`, `assets/jump${this.characterPrefix}/saltod(${i}).png`);
+        }
+
+        // Assets comunes
         this.load.image('xibalba_bg', 'assets/a.jpeg');
         this.load.image('ground', 'assets/piso2.png');
         this.load.image('ground2', 'assets/piso.webp');
         this.load.image('bomb', 'assets/bomb.png');
+        this.load.image('bomb_right', 'assets/Lanzad.png');
         this.load.image('powerup', 'assets/powerup.png');
-        this.load.image('bomb_left', 'assets/star.png');
+        this.load.image('bomb_left', 'assets/Lanzai.png');
         this.load.image('vidas', 'assets/vidas.png');
         
-        /* Cargar spritesheet del jugador (mejora futura)
-        this.load.spritesheet('player_walk', 'assets/caminarp1/caminar_sheet.png', {
-            frameWidth: 64, frameHeight: 64, startFrame: 0, endFrame: 24
-        });*/
-        
-        // Usar cargas individuales como fallback
-        for (let i = 1; i < 25; i++) {
-            this.load.image(`sprite${i}`, `assets/caminarp1/caminar(${i}).png`);
-        }
-        
-        // Sprites de salto
-        for (let i = 1; i <= 12; i++) {
-            this.load.image(`jump_i${i}`, `assets/caminarp1/saltoi(${i}).png`);
-            this.load.image(`jump_D${i}`, `assets/caminarp1/saltod(${i}).png`);
-        }
-        
-        // Boss sprites
+        // Sprites del jefe
         for (let i = 0; i < 19; i++) {
             this.load.image(`boss_${i}`, `assets/caminarp1/boss/${i}.webp`);
         }
@@ -59,10 +60,23 @@ class FinalLevel extends Phaser.Scene {
     }
 
     create() {
-        // Inicialización
+        // Configuración del personaje
+        this.characterConfig = {
+            idleFrame: this.characterPrefix === 'p1' ? 'caminar1' : 'caminar13',
+            walkFrames: {
+                left: this.characterPrefix === 'p1' ? { start: 1, end: 12 } : { start: 13, end: 24 },
+                right: this.characterPrefix === 'p1' ? { start: 1, end: 12 } : { start: 13, end: 24 }
+            },
+            jumpFrames: {
+                left: 'saltoi',
+                right: 'saltod'
+            }
+        };
+
+        // Inicialización del juego
         this.score = globalData.score || 0;
         this.gameOver = false;
-        this.currentFrame = 0;
+        this.currentFrame = this.characterPrefix === 'p1' ? 1 : 13;
         this.jumpFrame = 0;
         this.frameDelay = 0;
         this.lastDirection = '';
@@ -70,28 +84,24 @@ class FinalLevel extends Phaser.Scene {
         this.powerups = this.physics.add.group();
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         
-        // Configuración del juego
+        // Configuración del escenario
         this.add.image(400, 330, 'xibalba_bg');
-        
-        // Música del nivel
         this.musica = this.sound.add('boss_music', { loop: true });
         this.musica.play();
         
-        // Sistema de vidas - usar las vidas existentes de niveles anteriores
+        // Sistema de vidas
         this.vidas = new Vidas(this, 90, 70);
-        this.vidas.vidas = globalData.vidas || 3; // Obtener vidas guardadas o usar 3 por defecto
+        this.vidas.vidas = globalData.vidas || 3;
+        globalData.vidas = this.vidas.vidas;
         
-        // Actualizar iconos de vida según el valor sincronizado
+        // Actualizar iconos de vida
         this.vidas.iconos.forEach(icono => icono.destroy());
         this.vidas.iconos = [];
         for (let i = 0; i < this.vidas.vidas; i++) {
             this.vidas.iconos.push(this.add.image(90 + i * 35, 70, 'vidas').setScale(0.5));
         }
         
-        // Sincronizar con globalData
-        globalData.vidas = this.vidas.vidas;
-        
-        // Configuración de sistemas
+        // Configurar sistemas
         this.setupPlatforms();
         this.setupPlayer();
         this.setupBoss();
@@ -111,15 +121,11 @@ class FinalLevel extends Phaser.Scene {
             }
         });
     }
-    
-    // SISTEMAS DEL JUEGO
-    
+
     setupPlatforms() {
-        // Plataformas estáticas
         this.platforms = this.physics.add.staticGroup();
         this.platforms.create(100, 595, 'ground').setScale(1).refreshBody();
         
-        // Plataformas móviles
         this.movingPlatforms = this.physics.add.group({
             allowGravity: false,
             immovable: true
@@ -147,7 +153,7 @@ class FinalLevel extends Phaser.Scene {
     }
 
     setupPlayer() {
-        this.player = this.physics.add.sprite(100, 450, 'sprite1');
+        this.player = this.physics.add.sprite(100, 450, this.characterConfig.idleFrame);
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(false);
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -159,18 +165,18 @@ class FinalLevel extends Phaser.Scene {
             }
         });
     }
-    
+
     setupBoss() {
         this.boss = this.physics.add.sprite(400, 537, 'boss_0')
             .setCollideWorldBounds(true)
             .setDepth(1)
-            .setImmovable(true);    // Hacer inmovible para mayor estabilidad
+            .setImmovable(true);
         
         this.boss.body.setSize(120, 180);
         this.boss.body.setOffset(30, 20);
-        this.boss.body.allowGravity = false; // Evitar que caiga por gravedad
+        this.boss.body.allowGravity = false;
     }
-    
+
     setupBombs() {
         this.bombs = this.physics.add.group();
         
@@ -199,7 +205,7 @@ class FinalLevel extends Phaser.Scene {
             loop: true
         });
     }
-    
+
     setupPowerups() {
         this.time.addEvent({
             delay: Phaser.Math.Between(10000, 15000),
@@ -231,7 +237,7 @@ class FinalLevel extends Phaser.Scene {
             loop: true
         });
     }
-    
+
     setupScore() {
         this.scoreText = this.add.text(16, 16, 'Score: ' + this.score, { 
             fontSize: '32px',
@@ -239,28 +245,23 @@ class FinalLevel extends Phaser.Scene {
             fontFamily: 'Mayan'
         });
     }
-    
+
     setupCollisions() {
-        // Optimización: agrupar plataformas para reducir colisiones
         const allPlatforms = [this.platforms, this.movingPlatforms];
         
         this.physics.add.collider(this.player, allPlatforms);
         this.physics.add.collider(this.bombs, allPlatforms);
         this.physics.add.collider(this.playerBombs, allPlatforms);
         this.physics.add.collider(this.powerups, allPlatforms);
-        
-        // Fija el boss a plataformas pero con movimiento controlado
         this.physics.add.collider(this.boss, this.platforms, null, null, this);
         
         this.physics.add.overlap(this.player, this.powerups, this.collectPowerup, null, this);
         this.physics.add.collider(this.player, this.bombs, this.hitBomb, null, this);
         
-        // ARREGLO: Modificar la colisión del boss para que no desaparezca
         this.physics.add.overlap(this.playerBombs, this.boss, (bomb, boss) => {
             if (!bomb.active || this.bossInvulnerable || !boss.active) return;
             
             this.damageBoss(50);
-            //bomb.destroy();
             
             this.bossInvulnerable = true;
             this.time.delayedCall(500, () => {
@@ -272,16 +273,11 @@ class FinalLevel extends Phaser.Scene {
                 if (this.boss && this.boss.active) this.boss.clearTint();
             });
             
-            if (this.sound.add) {
-                this.sound.play('boss_hit');
-            }
+            this.sound.play('boss_hit');
         });
     }
-    
-    // SISTEMAS DEL BOSS
-    
+
     createBossAnimations() {
-        // Animaciones del boss optimizadas
         const createAnim = (key, frames, frameRate, repeat = 0) => {
             this.anims.create({
                 key,
@@ -307,7 +303,6 @@ class FinalLevel extends Phaser.Scene {
             Array.from({length: 12}, (_, i) => ({ key: `boss_${11 - i}` })), 
             10);
         
-        // Gestión de ciclo de animaciones
         this.boss.on('animationcomplete', anim => {
             if (anim.key === 'boss_entrance') {
                 this.tweens.add({
@@ -328,12 +323,12 @@ class FinalLevel extends Phaser.Scene {
         
         this.boss.play('boss_entrance');
     }
-    
+
     createBossHealthBar() {
         this.bossHealthBar = this.add.graphics();
         this.updateBossHealthBar();
     }
-    
+
     updateBossHealthBar() {
         this.bossHealthBar.clear();
         this.bossHealthBar.fillStyle(0x444444);
@@ -343,7 +338,7 @@ class FinalLevel extends Phaser.Scene {
         const width = (this.bossHealth / 1000) * 400;
         this.bossHealthBar.fillRect(350, 50, width, 30);
     }
-    
+
     damageBoss(amount) {
         if (this.gameOver || this.bossHealth <= 0 || this.bossInvulnerable) return;
         
@@ -355,7 +350,7 @@ class FinalLevel extends Phaser.Scene {
         
         this.checkBossPhase();
     }
-    
+
     checkBossPhase() {
         if (this.bossHealth <= 0) {
             this.bossHealth = 0;
@@ -373,7 +368,7 @@ class FinalLevel extends Phaser.Scene {
             this.startEnragedPhase();
         }
     }
-    
+
     startPhaseTwo() {
         this.boss.on('animationupdate', (anim, frame) => {
             if (anim.key === 'boss_atk' && frame.index === 9) {
@@ -390,18 +385,18 @@ class FinalLevel extends Phaser.Scene {
             loop: true
         });
     }
-    
+
     startEnragedPhase() {
         this.isEnraged = true;
         this.boss.setTint(0xFF0000);
     }
-    
+
     defeatBoss() {
         this.gameOver = true;
         this.boss.play('boss_death');
         
         this.time.delayedCall(2000, () => {
-            if (this.musica) this.musica.stop();
+            this.musica.stop();
             this.cameras.main.fadeOut(1000, 0, 0, 0);
             this.time.delayedCall(1000, () => {
                 globalData.score = this.score;
@@ -412,40 +407,41 @@ class FinalLevel extends Phaser.Scene {
             });
         });
     }
-    
-    // JUGADOR Y CONTROLES
-    
-    animateWalk(start, end) {
-        if (this.lastDirection !== `${start}-${end}`) {
-            this.currentFrame = start;
-            this.lastDirection = `${start}-${end}`;
+
+    animateWalk(direction) {
+        const frames = this.characterConfig.walkFrames[direction];
+        
+        if (this.lastDirection !== direction) {
+            this.currentFrame = frames.start;
+            this.lastDirection = direction;
         }
         
         if (this.frameDelay % 5 === 0) {
-            this.currentFrame = Phaser.Math.Wrap(this.currentFrame + 1, start, end + 1);
-            this.player.setTexture(`sprite${this.currentFrame}`);
+            this.currentFrame = Phaser.Math.Wrap(this.currentFrame + 1, frames.start, frames.end + 1);
+            this.player.setTexture(`caminar${this.currentFrame}`);
         }
         this.frameDelay++;
     }
-    
-    animateJump(prefix, start, end) {
+
+    animateJump(direction) {
+        const prefix = direction === 'left' ? 
+            this.characterConfig.jumpFrames.left : 
+            this.characterConfig.jumpFrames.right;
+        
         if (this.frameDelay % 5 === 0) {
-            this.jumpFrame = Phaser.Math.Wrap(
-                prefix === "jump_D" ? this.jumpFrame - 1 : this.jumpFrame + 1,
-                start, end + 1
-            );
+            this.jumpFrame = Phaser.Math.Wrap(this.jumpFrame + 1, 1, 13);
             this.player.setTexture(`${prefix}${this.jumpFrame}`);
         }
         this.frameDelay++;
     }
-    
+
     throwBomb() {
         if (!this.canThrow) return;
         
         const bomb = this.playerBombs.create(
             this.player.x + (this.isFacingLeft ? -40 : 40),
             this.player.y - 30,
-            this.isFacingLeft ? 'bomb_left' : 'bomb'
+            this.isFacingLeft ? 'bomb_left' : 'bomb_right'
         );
         
         bomb.setScale(0.8);
@@ -457,18 +453,15 @@ class FinalLevel extends Phaser.Scene {
         this.canThrow = false;
         this.time.delayedCall(1000, () => this.canThrow = true);
     }
-    
+
     hitBomb(player, bomb) {
         if (this.gameOver || this.isInvincible) return;
         
         bomb.destroy();
+        this.vidas.vidaperdida();
+        globalData.vidas = this.vidas.vidas;
         
-        this.vidas.vidaperdida(); // Reducir vidas usando la clase Vidas
-        globalData.vidas = this.vidas.vidas; // Sincronizar con globalData
-        
-        if (this.sound.add) {
-            this.sound.play('hurt');
-        }
+        this.sound.play('hurt');
         
         if (this.vidas.vidas <= 0) {
             this.physics.pause();
@@ -486,17 +479,14 @@ class FinalLevel extends Phaser.Scene {
             this.time.delayedCall(500, () => player.clearTint());
         }
     }
-    
+
     handleFallDamage() {
         if (this.gameOver || this.isInvincible) return;
         
-        this.vidas.vidaperdida(); // Reducir vidas usando la clase Vidas
-        globalData.vidas = this.vidas.vidas; // Sincronizar con globalData
+        this.vidas.vidaperdida();
+        globalData.vidas = this.vidas.vidas;
         
-        if (this.sound.add) {
-            this.sound.play('hurt');
-        }
-        
+        this.sound.play('hurt');
         this.cameras.main.shake(300, 0.02);
         this.player.setVelocity(0, 0);
         
@@ -510,12 +500,10 @@ class FinalLevel extends Phaser.Scene {
         } else {
             this.player.setPosition(100, 450);
             this.player.setTint(0xff0000);
-            this.time.delayedCall(500, () => {
-                this.player.clearTint();
-            });
+            this.time.delayedCall(500, () => this.player.clearTint());
         }
     }
-    
+
     collectPowerup(player, powerup) {
         powerup.destroy();
         this.isPowerUpActive = true;
@@ -524,39 +512,36 @@ class FinalLevel extends Phaser.Scene {
         player.setTint(0x00FF00);
         this.playerSpeed *= 1.5;
         
-        if (this.sound.add) {
-            this.sound.play('power_up');
-        }
-        
+        this.sound.play('power_up');
         this.powerUpTime = this.time.now + 10000;
     }
-    
+
     update() {
         if (this.gameOver) return;
-        
+
         const { left, right, up } = this.cursors;
         const isGrounded = this.player.body.touching.down;
         
-        // Control del jugador
+        // Movimiento básico
         this.player.setVelocityX(0);
         
         if (left.isDown) {
             this.player.setVelocityX(-this.playerSpeed);
             this.player.setFlipX(true);
-            this.animateWalk(0, 12);
+            this.animateWalk('left');
             this.isFacingLeft = true;
         } else if (right.isDown) {
             this.player.setVelocityX(this.playerSpeed);
             this.player.setFlipX(false);
-            this.animateWalk(16, 25);
+            this.animateWalk('right');
             this.isFacingLeft = false;
         } else {
-            this.player.setTexture(this.lastDirection.startsWith('0-12') ? 'sprite12' : 'sprite16');
+            this.player.setTexture(this.characterConfig.idleFrame);
         }
         
         if (up.isDown && isGrounded) {
             this.player.setVelocityY(this.jumpForce);
-            this.animateJump(left.isDown ? "jump_D" : "jump_i", 0, 12);
+            this.animateJump(this.isFacingLeft ? 'left' : 'right');
         }
         
         // Controles especiales
@@ -569,7 +554,7 @@ class FinalLevel extends Phaser.Scene {
             this.handleFallDamage();
         }
         
-        // Boss updates
+        // Comportamiento del jefe
         if (this.currentPhase === 2) {
             this.boss.x += Math.sin(this.time.now * 0.002) * 2.5;
         }
