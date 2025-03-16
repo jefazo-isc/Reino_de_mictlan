@@ -1,6 +1,8 @@
 class Puente extends Phaser.Scene {
     constructor() {
         super({ key: 'Puente' });
+        this.isPaused = false;
+
     }
 
     preload() {
@@ -38,6 +40,7 @@ class Puente extends Phaser.Scene {
         this.score = globalData.score || 0;
         this.gameOver = false;
         this.lanzasRecogidas = 0;
+        this.createPauseButton();
 
         // Configuración inicial
         this.add.image(400, 300, 'Puente');
@@ -76,6 +79,67 @@ class Puente extends Phaser.Scene {
             const platform = this.platforms.create(data.x, data.y, data.key);
             if (data.scale) platform.setScale(data.scale).refreshBody();
         });
+    }
+
+    createPauseButton() {
+        this.pauseButton = this.add.text(750, 30, '⏸', {
+            fontSize: '32px',
+            fill: '#fff',
+            backgroundColor: '#00000055',
+            padding: { x: 10, y: 5 }
+        })
+        .setOrigin(0.5)
+        .setInteractive()
+        .on('pointerdown', () => this.togglePause())
+        .setDepth(1000);
+    }
+
+    togglePause() {
+        if (!this.gameOver) {
+            this.isPaused = !this.isPaused;
+            
+            if (this.isPaused) {
+                this.physics.world.pause();
+                this.time.paused = true;
+                if (this.musica && this.musica.isPlaying) this.musica.pause();
+                this.showPauseMenu();
+            } else {
+                this.physics.world.resume();
+                this.time.paused = false;
+                if (this.musica && !this.musica.isPlaying) this.musica.resume();
+                this.hidePauseMenu();
+            }
+        }
+    }
+
+    showPauseMenu() {
+        this.pauseOverlay = this.add.graphics(400, 300, 800, 600, 0x000000, 0.7)
+            .setDepth(999);
+
+        this.resumeButton = this.add.text(400, 300, 'Reanudar', {
+            fontSize: '48px',
+            fill: '#fff',
+            backgroundColor: '#000000',
+            padding: { x: 20, y: 10 }
+        })
+        .setOrigin(0.5)
+        .setInteractive()
+        .on('pointerdown', () => this.togglePause())
+        .setDepth(1000);
+
+        this.pauseText = this.add.text(400, 200, 'PAUSA', {
+            fontSize: '64px',
+            fill: '#FFD700',
+            fontStyle: 'bold'
+        })
+        .setOrigin(0.5)
+        .setDepth(1000);
+    }
+
+    hidePauseMenu() {
+        this.pauseOverlay.destroy();
+        this.resumeButton.destroy();
+        this.pauseText.destroy();
     }
 
     setupPlayer() {
@@ -173,7 +237,7 @@ class Puente extends Phaser.Scene {
     }
 
     update() {
-        if (this.gameOver) return;
+        if (this.gameOver || this.isPaused) return;
 
         const { up, right, left } = this.cursors;
         const { touching } = this.player.body;

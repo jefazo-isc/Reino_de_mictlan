@@ -125,7 +125,7 @@ class Level1 extends Phaser.Scene {
         });
 
         // Transición a Puente
-        this.time.delayedCall(20000, () => {
+        this.time.delayedCall(5000, () => {
             globalData.score = this.score;
             this.musica.stop();
             this.scene.start('Puente');
@@ -164,8 +164,7 @@ class Level1 extends Phaser.Scene {
     }
 
     showPauseMenu() {
-        this.pauseOverlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7)
-            .setOrigin(0.5)
+        this.pauseOverlay = this.add.graphics(400, 300, 800, 600, 0x000000, 0.7)
             .setDepth(999);
 
         this.resumeButton = this.add.text(400, 300, 'Reanudar', {
