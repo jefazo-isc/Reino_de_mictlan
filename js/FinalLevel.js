@@ -24,11 +24,12 @@ class FinalLevel extends Phaser.Scene {
         this.load.image('bomb', 'assets/bomb.png');
         this.load.image('powerup', 'assets/powerup.png');
         this.load.image('bomb_left', 'assets/star.png');
+        this.load.image('vidas', 'assets/vidas.png');
         
-        // Cargar spritesheet del jugador (mejora futura)
+        /* Cargar spritesheet del jugador (mejora futura)
         this.load.spritesheet('player_walk', 'assets/caminarp1/caminar_sheet.png', {
             frameWidth: 64, frameHeight: 64, startFrame: 0, endFrame: 24
-        });
+        });*/
         
         // Usar cargas individuales como fallback
         for (let i = 1; i < 25; i++) {
@@ -49,11 +50,17 @@ class FinalLevel extends Phaser.Scene {
         for (let i = 0; i < 17; i++) {
             this.load.image(`boss_atk${i}`, `assets/caminarp1/boss/${i}.png`);
         }
+        
+        // Audio
+        this.load.audio('hurt', '../assets/sonido/hurt_male.wav');
+        this.load.audio('boss_hit', '../assets/sonido/hurt_male.wav');
+        this.load.audio('power_up', '../assets/sonido/hurt_male.wav');
+        this.load.audio('boss_music', '../assets/sonido/hurt_male.wav');
     }
 
     create() {
         // Inicialización
-        this.score = 0;
+        this.score = globalData.score || 0;
         this.gameOver = false;
         this.currentFrame = 0;
         this.jumpFrame = 0;
@@ -65,6 +72,24 @@ class FinalLevel extends Phaser.Scene {
         
         // Configuración del juego
         this.add.image(400, 330, 'xibalba_bg');
+        
+        // Música del nivel
+        this.musica = this.sound.add('boss_music', { loop: true });
+        this.musica.play();
+        
+        // Sistema de vidas - usar las vidas existentes de niveles anteriores
+        this.vidas = new Vidas(this, 90, 70);
+        this.vidas.vidas = globalData.vidas || 3; // Obtener vidas guardadas o usar 3 por defecto
+        
+        // Actualizar iconos de vida según el valor sincronizado
+        this.vidas.iconos.forEach(icono => icono.destroy());
+        this.vidas.iconos = [];
+        for (let i = 0; i < this.vidas.vidas; i++) {
+            this.vidas.iconos.push(this.add.image(90 + i * 35, 70, 'vidas').setScale(0.5));
+        }
+        
+        // Sincronizar con globalData
+        globalData.vidas = this.vidas.vidas;
         
         // Configuración de sistemas
         this.setupPlatforms();
@@ -127,15 +152,23 @@ class FinalLevel extends Phaser.Scene {
         this.player.setCollideWorldBounds(false);
         this.cursors = this.input.keyboard.createCursorKeys();
         
+        this.player.body.onWorldBounds = true;
+        this.physics.world.on('worldbounds', body => {
+            if (body.gameObject === this.player && body.y > this.game.config.height) {
+                this.handleFallDamage();
+            }
+        });
     }
     
     setupBoss() {
         this.boss = this.physics.add.sprite(400, 537, 'boss_0')
             .setCollideWorldBounds(true)
-            .setDepth(1);
-            
+            .setDepth(1)
+            .setImmovable(true);    // Hacer inmovible para mayor estabilidad
+        
         this.boss.body.setSize(120, 180);
         this.boss.body.setOffset(30, 20);
+        this.boss.body.allowGravity = false; // Evitar que caiga por gravedad
     }
     
     setupBombs() {
@@ -200,15 +233,10 @@ class FinalLevel extends Phaser.Scene {
     }
     
     setupScore() {
-        this.scoreText = this.add.text(16, 16, 'Score: 0', { 
+        this.scoreText = this.add.text(16, 16, 'Score: ' + this.score, { 
             fontSize: '32px',
             fill: '#FFF',
             fontFamily: 'Mayan'
-        });
-        
-        this.livesText = this.add.text(16, 60, `Lives: ${globalData.lives || 3}`, {
-            fontSize: '32px',
-            fill: '#FF3300'
         });
     }
     
@@ -216,21 +244,37 @@ class FinalLevel extends Phaser.Scene {
         // Optimización: agrupar plataformas para reducir colisiones
         const allPlatforms = [this.platforms, this.movingPlatforms];
         
-        this.physics.add.collider([this.player, this.bombs, this.boss, this.playerBombs, this.powerups], allPlatforms);
+        this.physics.add.collider(this.player, allPlatforms);
+        this.physics.add.collider(this.bombs, allPlatforms);
+        this.physics.add.collider(this.playerBombs, allPlatforms);
+        this.physics.add.collider(this.powerups, allPlatforms);
+        
+        // Fija el boss a plataformas pero con movimiento controlado
+        this.physics.add.collider(this.boss, this.platforms, null, null, this);
         
         this.physics.add.overlap(this.player, this.powerups, this.collectPowerup, null, this);
         this.physics.add.collider(this.player, this.bombs, this.hitBomb, null, this);
         
+        // ARREGLO: Modificar la colisión del boss para que no desaparezca
         this.physics.add.overlap(this.playerBombs, this.boss, (bomb, boss) => {
-            if (!bomb.active || this.bossInvulnerable) return;
+            if (!bomb.active || this.bossInvulnerable || !boss.active) return;
             
             this.damageBoss(50);
+            //bomb.destroy();
             
             this.bossInvulnerable = true;
-            this.time.delayedCall(500, () => this.bossInvulnerable = false);
+            this.time.delayedCall(500, () => {
+                if (this.scene.isActive()) this.bossInvulnerable = false;
+            });
             
             this.boss.setTint(0xFF0000);
-            this.time.delayedCall(100, () => this.boss.clearTint());
+            this.time.delayedCall(100, () => {
+                if (this.boss && this.boss.active) this.boss.clearTint();
+            });
+            
+            if (this.sound.add) {
+                this.sound.play('boss_hit');
+            }
         });
     }
     
@@ -357,8 +401,11 @@ class FinalLevel extends Phaser.Scene {
         this.boss.play('boss_death');
         
         this.time.delayedCall(2000, () => {
+            if (this.musica) this.musica.stop();
             this.cameras.main.fadeOut(1000, 0, 0, 0);
             this.time.delayedCall(1000, () => {
+                globalData.score = this.score;
+                globalData.vidas = this.vidas.vidas;
                 this.scene.start('Victoria', {
                     score: this.score
                 });
@@ -416,20 +463,56 @@ class FinalLevel extends Phaser.Scene {
         
         bomb.destroy();
         
-        globalData.lives--;
-        this.livesText.setText(`Lives: ${globalData.lives}`);
+        this.vidas.vidaperdida(); // Reducir vidas usando la clase Vidas
+        globalData.vidas = this.vidas.vidas; // Sincronizar con globalData
         
-        if (globalData.lives <= 0) {
+        if (this.sound.add) {
+            this.sound.play('hurt');
+        }
+        
+        if (this.vidas.vidas <= 0) {
             this.physics.pause();
             player.setTint(0xff0000);
             this.gameOver = true;
+            this.musica.stop();
             this.time.delayedCall(1000, () => {
-                this.scene.start('GameOver', { score: this.score });
+                globalData.score = this.score;
+                this.scene.start('GameOver', globalData);
             });
         } else {
             player.setPosition(100, 450);
             player.setVelocity(0, 0);
-            player.clearTint();
+            player.setTint(0xff0000);
+            this.time.delayedCall(500, () => player.clearTint());
+        }
+    }
+    
+    handleFallDamage() {
+        if (this.gameOver || this.isInvincible) return;
+        
+        this.vidas.vidaperdida(); // Reducir vidas usando la clase Vidas
+        globalData.vidas = this.vidas.vidas; // Sincronizar con globalData
+        
+        if (this.sound.add) {
+            this.sound.play('hurt');
+        }
+        
+        this.cameras.main.shake(300, 0.02);
+        this.player.setVelocity(0, 0);
+        
+        if (this.vidas.vidas <= 0) {
+            this.gameOver = true;
+            this.musica.stop();
+            this.time.delayedCall(1000, () => {
+                globalData.score = this.score;
+                this.scene.start('GameOver', { score: this.score });
+            });
+        } else {
+            this.player.setPosition(100, 450);
+            this.player.setTint(0xff0000);
+            this.time.delayedCall(500, () => {
+                this.player.clearTint();
+            });
         }
     }
     
@@ -440,6 +523,10 @@ class FinalLevel extends Phaser.Scene {
         
         player.setTint(0x00FF00);
         this.playerSpeed *= 1.5;
+        
+        if (this.sound.add) {
+            this.sound.play('power_up');
+        }
         
         this.powerUpTime = this.time.now + 10000;
     }
@@ -477,7 +564,10 @@ class FinalLevel extends Phaser.Scene {
             this.throwBomb();
         }
         
-
+        // Caída
+        if (this.player.y > 700) {
+            this.handleFallDamage();
+        }
         
         // Boss updates
         if (this.currentPhase === 2) {
