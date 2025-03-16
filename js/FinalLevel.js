@@ -337,11 +337,11 @@ class FinalLevel extends Phaser.Scene {
     updateBossHealthBar() {
         this.bossHealthBar.clear();
         this.bossHealthBar.fillStyle(0x444444);
-        this.bossHealthBar.fillRect(100, 50, 400, 30);
+        this.bossHealthBar.fillRect(350, 50, 400, 30);
         
         this.bossHealthBar.fillStyle(0xFF3300);
         const width = (this.bossHealth / 1000) * 400;
-        this.bossHealthBar.fillRect(50, 50, width, 30);
+        this.bossHealthBar.fillRect(350, 50, width, 30);
     }
     
     damageBoss(amount) {
