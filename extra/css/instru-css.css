@@ -1,10 +1,14 @@
+:root {
+    --color-fondo1: #5b9f96;
+    --color-fondo2: #c0a13a00;
+}
 body {
     margin: 0;
     padding: 0;
     display: grid;
     place-items: center;
     height: 100vh;
-    background-color: #5b9f96;
+    background-color: var(--color-fondo1);
 }
 
 #canva-container {
@@ -13,5 +17,5 @@ body {
     place-items: center;
     border: 1px solid black;
     background: url(../../assets/sky.webp);
-    background-color: #c0a13a00;
+    background-color: var(--color-fondo2);
 }
