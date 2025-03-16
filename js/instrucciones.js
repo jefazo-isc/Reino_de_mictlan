@@ -34,8 +34,11 @@ function dibujar() {
     ctx.fillText('Trata de conseguir la puntuacion mas alta', canvas.width / 2, 350);
     ctx.strokeText('Trata de conseguir la puntuacion mas alta', canvas.width / 2, 350);
 
-    ctx.fillText('Obtienes puntos al recoger las flores y otros objetos', canvas.width / 2, 400);
-    ctx.strokeText('Obtienes puntos al recoger las flores y otros objetos', canvas.width / 2, 400);
+    ctx.fillText('Obtienes puntos al recoger las flores, las flechas y hongos', canvas.width / 2, 400);
+    ctx.strokeText('Obtienes puntos al recoger las flores, las flechas y hongos ', canvas.width / 2, 400);
+
+    ctx.fillText('En el nivel final disapara al enemigo con la tecla espaciadora', canvas.width / 2, 450);
+    ctx.strokeText('En el nivel final disapara al enemigo con la tecla espaciadora ', canvas.width / 2, 450);
 
     ctx.fillText('Buena suerte!', canvas.width / 2, 500);
     ctx.strokeText('Buena suerte!', canvas.width / 2, 500);
@@ -62,8 +65,11 @@ function dibujar() {
     ctx.fillText('Trata de conseguir la puntuacion mas alta', canvas.width / 2, 350);
     ctx.strokeText('Trata de conseguir la puntuacion mas alta', canvas.width / 2, 350);
 
-    ctx.fillText('Obtienes puntos al recoger las flores y otros objetos', canvas.width / 2, 400);
-    ctx.strokeText('Obtienes puntos al recoger las flores y otros objetos', canvas.width / 2, 400);
+    ctx.fillText('Obtienes puntos al recoger las flores, las flechas y hongos', canvas.width / 2, 400);
+    ctx.strokeText('Obtienes puntos al recoger las flores, las flechas y hongos ', canvas.width / 2, 400);
+    
+    ctx.fillText('En el nivel final disapara al enemigo con la tecla espaciadora', canvas.width / 2, 450);
+    ctx.strokeText('En el nivel final disapara al enemigo con la tecla espaciadora ', canvas.width / 2, 450);
 
     ctx.fillText('Buena suerte!', canvas.width / 2, 500);
     ctx.strokeText('Buena suerte!', canvas.width / 2, 500);
