@@ -31,6 +31,10 @@ class Level1 extends Phaser.Scene {
         this.load.image('ground3', 'assets/plat3.webp');
         this.load.image('ground4', 'assets/plat4.webp');
         this.load.image('star', 'assets/flor.png');
+        this.load.audio('musicaFondo', '../assets/sonido/MusicaAzteca.mp3');
+        this.load.audio('fuego', '../assets/sonido/fire_ball.wav');
+        this.load.audio('collect', '../assets/sonido/collect.wav');
+        this.load.audio('hurt', '../assets/sonido/hurt_male.wav');
 
         // Bolas de fuego
         for (let i = 1; i <= 4; i++) {
@@ -50,6 +54,8 @@ class Level1 extends Phaser.Scene {
         this.setupBombs();
         this.setupCollisions();
         this.setupScore();
+        const musica = this.sound.add('musicaFondo', { loop: true });
+        musica.play();
 
         // Configuración de patrones de bolas
         this.patternIndex = 0;
@@ -95,6 +101,7 @@ class Level1 extends Phaser.Scene {
         // Transición a Puente
         this.time.delayedCall(20000, () => {
             window.globalData.score = this.score;
+            musica.stop();
             this.scene.start('Puente');
         });
     }
@@ -156,6 +163,7 @@ class Level1 extends Phaser.Scene {
                 const x = pos + Phaser.Math.Between(-20, 20);
                 const bomb = this.bombs.create(x, 0, 'bola1');
                 bomb.setVelocityY(90).play('bolaAnim');
+                this.sound.play('fuego');
             });
         });
     }
@@ -201,6 +209,7 @@ class Level1 extends Phaser.Scene {
         star.disableBody(true, true);
         this.score += 10;
         this.scoreText.setText(`Score: ${this.score}`);
+        this.sound.play('collect');
         window.globalData.score = this.score;
 
         if (this.stars.countActive(true) === 0) {
@@ -211,6 +220,7 @@ class Level1 extends Phaser.Scene {
     hitBomb(player, bomb) {
         bomb.disableBody(true, true);
         this.vidas.vidaperdida();
+        this.sound.play('hurt');
 
         if (this.vidas.vidas > 0) {
             player.setTint(0xff0000);
