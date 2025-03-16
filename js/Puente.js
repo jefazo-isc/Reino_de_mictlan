@@ -1,10 +1,29 @@
 class Puente extends Phaser.Scene {
     constructor() {
         super({ key: 'Puente' });
+        this.characterPrefix = 'p1';
     }
 
     preload() {
-        // Cargar imágenes estáticas
+        // 1. Determinar prefijo del personaje
+        const selectedChar = window.globalData.selectedCharacter;
+        this.characterPrefix = selectedChar.replace('character', 'p');
+
+        // 2. Cargar assets del personaje
+        this.load.image('parado', `assets/caminar${this.characterPrefix}/Parado.png`);
+        
+        // Caminar (24 frames: 1-12 izquierda, 13-24 derecha)
+        for (let i = 1; i <= 24; i++) {
+            this.load.image(`caminar${i}`, `assets/caminar${this.characterPrefix}/caminar(${i}).png`);
+        }
+        
+        // Saltos (0-12 frames para ambas direcciones)
+        for (let i = 1; i <= 12; i++) {
+            this.load.image(`saltoi${i}`, `assets/caminar${this.characterPrefix}/saltoi(${i}).png`);
+            this.load.image(`saltod${i}`, `assets/caminar${this.characterPrefix}/saltod(${i}).png`);
+        }
+
+        // 3. Cargar assets comunes
         this.load.image('vidas', 'assets/vidas.png');
         this.load.image('Puente', 'assets/Puente.webp');
         this.load.image('ground', 'assets/piso.webp');
@@ -13,54 +32,27 @@ class Puente extends Phaser.Scene {
         this.load.audio('hurt', '../assets/sonido/hurt_male.wav');
         this.load.audio('lanza', '../assets/sonido/lanza.wav');
         this.load.audio('musicaFondo', '../assets/sonido/MusicaAzteca.mp3');
-
-
-        // Cargar sprites dinámicos
-        const assets = [
-            { prefix: 'sprite', start: 0, end: 25 },
-            { prefix: 'jump_i', start: 0, end: 12 },
-            { prefix: 'jump_D', start: 0, end: 12 }
-        ];
-
-        assets.forEach(asset => {
-            for (let i = asset.start; i <= asset.end; i++) {
-                this.load.image(`${asset.prefix}${i}`, `assets/${asset.prefix}/${asset.prefix} (${i}).png`);
-            }
-        });
     }
 
     create() {
-        this.score = globalData.score || 0;
+        this.score = window.globalData.score || 0;
         this.gameOver = false;
         this.lanzasRecogidas = 0;
 
-        // Fondo
+        // Configuración inicial
         this.add.image(400, 300, 'Puente');
-        const musica = this.sound.add('musicaFondo', { loop: true });
-        musica.play();
+        this.musica = this.sound.add('musicaFondo', { loop: true });
+        this.musica.play();
 
-        // Vidas
         this.vidas = new Vidas(this, 90, 70);
-
-        // Plataformas
         this.setupPlatforms();
-
-        // Jugador
         this.setupPlayer();
-
-        // Lanzas
         this.setupLanzas();
-
-        // Colisiones y overlaps
         this.setupCollisions();
-
-        // Texto de puntuación
         this.setupScore();
-
-        // Contador de lanzas
         this.setupLanzasCounter();
 
-        // Generar lanzas cada 1 segundo
+        // Eventos temporales
         this.time.addEvent({
             delay: 1000,
             callback: this.spawnLanzas,
@@ -68,7 +60,6 @@ class Puente extends Phaser.Scene {
             loop: true
         });
 
-        // Cambiar a la escena FinalLevel después de 45 segundos
         this.time.delayedCall(45000, () => this.endLevel());
     }
 
@@ -88,33 +79,32 @@ class Puente extends Phaser.Scene {
     }
 
     setupPlayer() {
-        this.player = this.physics.add.sprite(100, 450, 'sprite0');
+        this.player = this.physics.add.sprite(100, 450, 'parado');
         this.player.setCollideWorldBounds(true);
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.currentFrame = 0;
+        this.currentFrame = 1;
         this.jumpFrame = 0;
     }
 
     setupLanzas() {
-        this.lanzas = this.physics.add.group(); // Grupo para las lanzas activas
-        this.lanzasClavadas = this.physics.add.staticGroup(); // Volvemos a usar staticGroup para las lanzas clavadas
+        this.lanzas = this.physics.add.group();
+        this.lanzasClavadas = this.physics.add.staticGroup();
     }
 
     setupCollisions() {
         this.physics.add.collider(this.player, this.platforms);
-        this.physics.add.collider(this.lanzas, this.platforms, this.clavarLanza, null, this); // Lanzas se clavan en el suelo
+        this.physics.add.collider(this.lanzas, this.platforms, this.clavarLanza, null, this);
         this.physics.add.collider(this.player, this.lanzas, this.hitLanza, null, this);
-        
-        // Usamos overlap para detectar cuando el jugador toca una lanza clavada
         this.physics.add.overlap(this.player, this.lanzasClavadas, this.recogerLanza, null, this);
     }
+
     setupScore() {
-        // Mostrar el score acumulado desde Level1
         this.scoreText = this.add.text(16, 16, `Score: ${this.score}`, {
             fontSize: '32px',
             fill: '#fff'
         });
     }
+
     setupLanzasCounter() {
         this.lanzasIcon = this.add.image(80, 100, 'lanzas').setScale(0.5);
         this.lanzasText = this.add.text(90, 90, 'x 0', {
@@ -125,89 +115,59 @@ class Puente extends Phaser.Scene {
 
     spawnLanzas() {
         const directions = [
-            // Desde arriba (hacia abajo, con gravedad)
             { x: Phaser.Math.Between(0, 800), y: -50, velocityX: 0, velocityY: 100, rotation: 0, gravity: true },
-            // Desde la izquierda (hacia la derecha, sin gravedad)
             { x: -50, y: Phaser.Math.Between(0, 600), velocityX: 300, velocityY: 0, rotation: -Math.PI / 2, gravity: false },
-            // Desde la derecha (hacia la izquierda, sin gravedad)
             { x: 850, y: Phaser.Math.Between(0, 600), velocityX: -300, velocityY: 0, rotation: Math.PI / 2, gravity: false },
-            // Diagonal desde la esquina superior izquierda (hacia abajo y derecha, con gravedad)
             { x: -50, y: Phaser.Math.Between(-100, 300), velocityX: 300, velocityY: 100, rotation: -Math.PI / 4, gravity: true },
-            // Diagonal desde la esquina superior derecha (hacia abajo y izquierda, con gravedad)
             { x: 850, y: Phaser.Math.Between(-100, 300), velocityX: -300, velocityY: 100, rotation: Math.PI / 4, gravity: true }
         ];
 
         const direction = Phaser.Math.RND.pick(directions);
         const lanza = this.lanzas.create(direction.x, direction.y, 'lanzas');
 
-        // Configurar la gravedad
         lanza.body.allowGravity = direction.gravity;
-
-        // Configurar velocidad y rotación
         lanza.setVelocity(direction.velocityX, direction.velocityY);
         lanza.rotation = direction.rotation;
-
         lanza.setBounce(0);
         this.sound.play('lanza');
     }
 
     clavarLanza(lanza, platform) {
-        // Crear una nueva lanza clavada en la misma posición
         const lanzaClavada = this.lanzasClavadas.create(lanza.x, lanza.y, 'lanzas');
-        
-        // Mantener la misma rotación
         lanzaClavada.rotation = lanza.rotation;
-        
-        // Refrescar el cuerpo físico
         lanzaClavada.refreshBody();
-        
-        // Eliminar la lanza original
         lanza.destroy();
-        
-        // Console.log para depuración
-        console.log("Lanza clavada. Total lanzas clavadas:", this.lanzasClavadas.getChildren().length);
-        
-        // Timer para eliminar la lanza después de 1.5 segundos
+
         this.time.delayedCall(1500, () => {
-            if (lanzaClavada && lanzaClavada.active) {
-                lanzaClavada.destroy();
-                console.log("Lanza eliminada por timer");
-            }
+            if (lanzaClavada?.active) lanzaClavada.destroy();
         });
     }
-    
+
     recogerLanza(player, lanza) {
-        console.log("Overlap detectado - recogerLanza llamado");
-        
-        // Verificar que la lanza existe y está activa
-        if (lanza && lanza.active) {
+        if (lanza?.active) {
             lanza.destroy();
             this.lanzasRecogidas++;
             this.lanzasText.setText(`x ${this.lanzasRecogidas}`);
-            
-            // Efecto visual al recoger lanza
+
             this.tweens.add({
                 targets: this.lanzasIcon,
                 scale: 0.6,
                 duration: 100,
                 yoyo: true
             });
-            
-            console.log("Lanza recogida. Total munición:", this.lanzasRecogidas);
-            
-            // Verificar si se han recogido 12 lanzas para pasar al nivel final
-            if (this.lanzasRecogidas >= 12) {
-                console.log("¡12 lanzas recogidas! Pasando al nivel final");
-                this.endLevel();
-            }
+
+            if (this.lanzasRecogidas >= 12) this.endLevel();
         }
     }
 
     endLevel() {
         this.gameOver = true;
-        musica.stop();
-        this.scene.start('FinalLevel', { score: this.score, lanzas: this.lanzasRecogidas });
-        
+        this.musica.stop();
+        window.globalData.score = this.score;
+        this.scene.start('FinalLevel', { 
+            score: this.score,
+            lanzas: this.lanzasRecogidas 
+        });
     }
 
     update() {
@@ -218,37 +178,36 @@ class Puente extends Phaser.Scene {
 
         if (up.isDown && touching.down) {
             this.player.setVelocityY(-330);
-            if (right.isDown) this.animateJump("jump_i");
-            else if (left.isDown) this.animateJump("jump_D");
+            if (right.isDown) this.animateJump('saltod');
+            else if (left.isDown) this.animateJump('saltoi');
         } else if (left.isDown) {
             this.player.setVelocityX(-160);
-            this.animateWalk(0, 12);
+            this.animateWalk(1, 12); // Izquierda: frames 1-12
         } else if (right.isDown) {
             this.player.setVelocityX(160);
-            this.animateWalk(16, 25);
+            this.animateWalk(13, 24); // Derecha: frames 13-24
         } else {
             this.player.setVelocityX(0);
-            this.player.setTexture('sprite12');
+            this.player.setTexture('parado');
         }
     }
 
-    animateWalk(start, end) {
-        this.currentFrame = this.currentFrame >= end ? start : this.currentFrame + 1;
-        this.player.setTexture(`sprite${this.currentFrame}`);
+    animateWalk(startFrame, endFrame) {
+        this.currentFrame = this.currentFrame >= endFrame ? startFrame : this.currentFrame + 1;
+        this.player.setTexture(`caminar${this.currentFrame}`);
     }
 
-    animateJump(prefix) {
-        this.jumpFrame = prefix === "jump_D" ? this.jumpFrame - 1 : this.jumpFrame + 1;
-        this.jumpFrame = this.jumpFrame < 0 ? 12 : (this.jumpFrame > 12 ? 0 : this.jumpFrame);
-        this.player.setTexture(`${prefix}${this.jumpFrame}`);
+    animateJump(direction) {
+        this.jumpFrame = (this.jumpFrame + 1) % 13;
+        this.player.setTexture(`${direction}${this.jumpFrame}`);
     }
 
     hitLanza(player, lanza) {
-        if (!this.lanzasClavadas.contains(lanza)) { // Solo si la lanza no está clavada
+        if (!this.lanzasClavadas.contains(lanza)) {
             lanza.disableBody(true, true);
             this.vidas.vidaperdida();
             this.sound.play('hurt');
-    
+
             if (this.vidas.vidas > 0) {
                 player.setTint(0xff0000);
                 this.time.delayedCall(500, () => player.clearTint());
@@ -256,6 +215,7 @@ class Puente extends Phaser.Scene {
                 this.physics.pause();
                 player.setTint(0xff0000);
                 this.gameOver = true;
+                window.globalData.score = this.score;
                 this.scene.start('GameOver');
             }
         }

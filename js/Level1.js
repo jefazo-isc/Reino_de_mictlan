@@ -17,7 +17,7 @@ class Level1 extends Phaser.Scene {
         }
         
         // Saltos (0-12 frames para ambas direcciones)
-        for (let i = 0; i <= 12; i++) {
+        for (let i = 1; i <= 12; i++) {
             this.load.image(`saltoi${i}`, `assets/caminar${this.characterPrefix}/saltoi(${i}).png`);
             this.load.image(`saltod${i}`, `assets/caminar${this.characterPrefix}/saltod(${i}).png`);
         }
