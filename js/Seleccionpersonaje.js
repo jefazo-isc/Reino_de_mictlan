@@ -106,8 +106,8 @@ class Seleccionpersonaje extends Phaser.Scene {
             .fillRoundedRect(300, 500, 200, 50, 10)
             .setInteractive(new Phaser.Geom.Rectangle(300, 500, 200, 50), Phaser.Geom.Rectangle.Contains)
             .on('pointerdown', () => this.startGame())
-            .on('pointerover', () => this.startButton.setFillStyle(0xA0522D, 0.9))
-            .on('pointerout', () => this.startButton.setFillStyle(0x8B4513, 0.8))
+            //.on('pointerover', () => this.startButton.setFillStyle(0xA0522D, 0.9))
+            //.on('pointerout', () => this.startButton.setFillStyle(0x8B4513, 0.8))
             .setAlpha(0.5)
             .setDepth(15);
 
