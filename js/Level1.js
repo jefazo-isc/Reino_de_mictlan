@@ -1,6 +1,7 @@
 class Level1 extends Phaser.Scene {
     constructor() {
         super({ key: 'Level1' });
+        this.isPaused = false;
     }
 
     preload() {
@@ -49,13 +50,13 @@ class Level1 extends Phaser.Scene {
         this.vidas = new Vidas(this, 90, 70);
         this.setupPlatforms();
         this.setupPlayer();
+        this.createPauseButton();
         this.setupStars();
         this.setupBombs();
         this.setupCollisions();
         this.setupScore();
-        const musica = this.sound.add('musicaFondo', { loop: true });
-        musica.play();
-
+        this.musica = this.sound.add('musicaFondo', { loop: true });
+        this.musica.play()
         // Configuración de patrones de bolas
         this.patternIndex = 0;
         this.patterns = [
@@ -103,8 +104,71 @@ class Level1 extends Phaser.Scene {
             musica.stop();
             this.scene.start('Puente');
         });
+
+    }
+    createPauseButton() {
+        // Botón de pausa en la esquina superior derecha
+        this.pauseButton = this.add.text(750, 30, '⏸', {
+            fontSize: '32px',
+            fill: '#fff',
+            backgroundColor: '#00000055',
+            padding: { x: 10, y: 5 }
+        })
+        .setOrigin(0.5)
+        .setInteractive()
+        .on('pointerdown', () => this.togglePause())
+        .setDepth(1000);
     }
 
+    togglePause() {
+        if (!this.gameOver) {
+            this.isPaused = !this.isPaused;
+            
+            if (this.isPaused) {
+                this.physics.pause();
+                this.time.paused = true;
+                if (this.musica) this.musica.pause(); // Verificar existencia
+                this.showPauseMenu();
+            } else {
+                this.physics.resume();
+                this.time.paused = false;
+                if (this.musica) this.musica.resume(); // Verificar existencia
+                this.hidePauseMenu();
+            }
+        }}
+
+        showPauseMenu() {
+            // Fondo semitransparente
+            this.pauseOverlay = this.add.graphics(400, 300, 800, 600, 0x000000, 0.7)
+                .setDepth(999);
+    
+            // Botón de reanudar
+            this.resumeButton = this.add.text(400, 300, 'Reanudar', {
+                fontSize: '48px',
+                fill: '#fff',
+                backgroundColor: '#000000',
+                padding: { x: 20, y: 10 }
+            })
+            .setOrigin(0.5)
+            .setInteractive()
+            .on('pointerdown', () => this.togglePause())
+            .setDepth(1000);
+    
+            // Texto de pausa
+            this.pauseText = this.add.text(400, 200, 'PAUSA', {
+                fontSize: '64px',
+                fill: '#FFD700',
+                fontStyle: 'bold'
+            })
+            .setOrigin(0.5)
+            .setDepth(1000);
+        }
+
+        hidePauseMenu() {
+            this.pauseOverlay.destroy();
+            this.resumeButton.destroy();
+            this.pauseText.destroy();
+        }
     setupPlatforms() {
         this.platforms = this.physics.add.staticGroup();
         this.platforms.create(400, 595, 'ground').setScale(1).refreshBody();
@@ -168,8 +232,7 @@ class Level1 extends Phaser.Scene {
     }
 
     update() {
-        if (this.gameOver) return;
-
+        if (this.gameOver || this.isPaused) return;
         const isJumping = this.cursors.up.isDown && this.player.body.touching.down;
         const isMovingRight = this.cursors.right.isDown;
         const isMovingLeft = this.cursors.left.isDown;
