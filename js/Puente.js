@@ -48,6 +48,10 @@ class Puente extends Phaser.Scene {
         this.musica.play();
         this.vidas = new Vidas(this, 90, 70);
         globalData.vidas = this.vidas.vidas; // Mantener sincronizado
+        this.alias = this.add.text(260, 15, 'Jugador:' + globalData.alias, {
+            fontSize: '32px',
+            fill: '#fff',
+        });
         this.setupPlatforms();
         this.setupPlayer();
         this.setupLanzas();
@@ -230,10 +234,7 @@ class Puente extends Phaser.Scene {
         this.gameOver = true;
         this.musica.stop();
         globalData.score = this.score;
-        this.scene.start('FinalLevel', { 
-            score: this.score,
-            lanzas: this.lanzasRecogidas 
-        });
+        this.scene.start('FinalLevel', globalData);
     }
 
     update() {
@@ -282,6 +283,7 @@ class Puente extends Phaser.Scene {
                 player.setTint(0xff0000);
                 this.gameOver = true;
                 globalData.score = this.score;
+                this.musica.stop();
                 this.scene.start('GameOver', globalData);
             }
         }
