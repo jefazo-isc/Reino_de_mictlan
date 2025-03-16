@@ -28,14 +28,14 @@ function dibujar() {
     ctx.fillText('Usa la flecha hacia arriba para saltar', canvas.width / 2, 250);
     ctx.strokeText('Usa la flecha hacia arriba para saltar', canvas.width / 2, 250);
 
-    ctx.fillText('Evita a los en enemigos o perderas', canvas.width / 2, 300);
-    ctx.strokeText('Evita a los en enemigos o perderas', canvas.width / 2, 300);
+    ctx.fillText('Evita a los en enemigos o perderas, tambien las flechas', canvas.width / 2, 300);
+    ctx.strokeText('Evita a los en enemigos o perderas, tambien las flechas', canvas.width / 2, 300);
 
     ctx.fillText('Trata de conseguir la puntuacion mas alta', canvas.width / 2, 350);
     ctx.strokeText('Trata de conseguir la puntuacion mas alta', canvas.width / 2, 350);
 
-    ctx.fillText('Obtienes puntos al recoger las estrellas', canvas.width / 2, 400);
-    ctx.strokeText('Obtienes puntos al recoger las estrellas', canvas.width / 2, 400);
+    ctx.fillText('Obtienes puntos al recoger las flores y otros objetos', canvas.width / 2, 400);
+    ctx.strokeText('Obtienes puntos al recoger las flores y otros objetos', canvas.width / 2, 400);
 
     ctx.fillText('Buena suerte!', canvas.width / 2, 500);
     ctx.strokeText('Buena suerte!', canvas.width / 2, 500);
@@ -56,14 +56,14 @@ function dibujar() {
     ctx.fillText('Usa la flecha hacia arriba para saltar', canvas.width / 2, 250);
     ctx.strokeText('Usa la flecha hacia arriba para saltar', canvas.width / 2, 250);
 
-    ctx.fillText('Evita a los en enemigos o perderas', canvas.width / 2, 300);
-    ctx.strokeText('Evita a los en enemigos o perderas', canvas.width / 2, 300);
+    ctx.fillText('Evita a los en enemigos o perderas, tambien las flechas', canvas.width / 2, 300);
+    ctx.strokeText('Evita a los en enemigos o perderas, tambien las flechas', canvas.width / 2, 300);
 
     ctx.fillText('Trata de conseguir la puntuacion mas alta', canvas.width / 2, 350);
     ctx.strokeText('Trata de conseguir la puntuacion mas alta', canvas.width / 2, 350);
 
-    ctx.fillText('Obtienes puntos al recoger las estrellas', canvas.width / 2, 400);
-    ctx.strokeText('Obtienes puntos al recoger las estrellas', canvas.width / 2, 400);
+    ctx.fillText('Obtienes puntos al recoger las flores y otros objetos', canvas.width / 2, 400);
+    ctx.strokeText('Obtienes puntos al recoger las flores y otros objetos', canvas.width / 2, 400);
 
     ctx.fillText('Buena suerte!', canvas.width / 2, 500);
     ctx.strokeText('Buena suerte!', canvas.width / 2, 500);
