@@ -5,6 +5,8 @@ class Victoria extends Phaser.Scene {
 
     preload() {
         this.load.image('victoria', '../assets/victoria.webp');
+        this.load.audio('win', '../assets/sonido/yay.wav');
+        this.load.audio('youwin', '../assets/sonido/youwin.mp3');
     }
 
     create() {
@@ -109,6 +111,22 @@ class Victoria extends Phaser.Scene {
             this.tweens.killTweensOf(volverButton);
             volverButton.alpha = 1;
         });
+
+        this.time.addEvent({
+            delay: 4000,
+            callback: () => {
+                this.sound.play('youwin');
+            },
+            loop: false
+        });
+        this.time.addEvent({
+            delay: 500,
+            callback: () => {
+                this.sound.play('win');
+            },
+            loop: false
+        });
+
         // Supongamos que globalData.alias y globalData.score ya están actualizados
         if (localStorage.getItem(globalData.alias)) {
             let registro = JSON.parse(localStorage.getItem(globalData.alias));
