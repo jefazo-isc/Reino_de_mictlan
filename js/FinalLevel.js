@@ -103,7 +103,6 @@ class FinalLevel extends Phaser.Scene {
         const platformData = [
             { x: 1100, y: 100, key: 'ground', scaleX: 1, moveX: 0, moveY: 510 },
             { x: 250, y: 355, key: 'ground2', scaleX: 0.8, moveX: 100, moveY: 0 },
-            { x: 600, y: 50, key: 'ground2', scaleX: 1.2, moveX: 120, moveY: 0 }
         ];
         
         platformData.forEach(data => {
@@ -128,12 +127,6 @@ class FinalLevel extends Phaser.Scene {
         this.player.setCollideWorldBounds(false);
         this.cursors = this.input.keyboard.createCursorKeys();
         
-        this.player.body.onWorldBounds = true;
-        this.physics.world.on('worldbounds', body => {
-            if (body.gameObject === this.player && body.y > this.game.config.height) {
-                this.time.delayedCall(1000, () => this.handleFallDamage());
-            }
-        });
     }
     
     setupBoss() {
@@ -232,7 +225,6 @@ class FinalLevel extends Phaser.Scene {
             if (!bomb.active || this.bossInvulnerable) return;
             
             this.damageBoss(50);
-            bomb.destroy();
             
             this.bossInvulnerable = true;
             this.time.delayedCall(500, () => this.bossInvulnerable = false);
@@ -441,28 +433,6 @@ class FinalLevel extends Phaser.Scene {
         }
     }
     
-    handleFallDamage() {
-        if (this.gameOver) return;
-        
-        globalData.lives--;
-        this.livesText.setText(`Lives: ${globalData.lives}`);
-        
-        this.cameras.main.shake(300, 0.02);
-        this.player.setVelocity(0, 0);
-        
-        if (globalData.lives <= 0) {
-            this.gameOver = true;
-            this.time.delayedCall(1000, () => {
-                this.scene.start('GameOver', { score: this.score });
-            });
-        } else {
-            this.player.setPosition(100, 450);
-            this.time.delayedCall(500, () => {
-                this.player.clearTint();
-            });
-        }
-    }
-    
     collectPowerup(player, powerup) {
         powerup.destroy();
         this.isPowerUpActive = true;
@@ -507,10 +477,7 @@ class FinalLevel extends Phaser.Scene {
             this.throwBomb();
         }
         
-        // Caída
-        if (this.player.y > 700) {
-            this.handleFallDamage();
-        }
+
         
         // Boss updates
         if (this.currentPhase === 2) {
