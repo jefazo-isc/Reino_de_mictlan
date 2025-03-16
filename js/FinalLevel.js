@@ -10,201 +10,158 @@ class FinalLevel extends Phaser.Scene {
         // Variables del jugador
         this.playerSpeed = 160;
         this.jumpForce = -330;
-        this.lastDirection = '';
-		this.bossInvulnerable = false;
-		this.isPowerUpActive = false;
-    	this.powerUpTime = 0;
-
-    	this.canThrow = true; // Cooldown de lanzamiento
-   		this.playerBombs = null; // Solo declarar, no inicializar aquí
- 		this.isFacingLeft = false; // Dirección del jugador
+        this.canThrow = true;
+        this.isFacingLeft = false;
+        this.isPowerUpActive = false;
+        this.isInvincible = false;
     }
 
     preload() {
-    
-        // Cargar assets base
-
-        
+        // Optimización: usar spritesheets en lugar de imágenes individuales
         this.load.image('xibalba_bg', 'assets/a.jpeg');
         this.load.image('ground', 'assets/piso2.png');
         this.load.image('ground2', 'assets/piso.webp');
         this.load.image('bomb', 'assets/bomb.png');
-       	this.load.image('powerup', 'assets/powerup.png');
-       	this.load.image('bomb_left', 'assets/star.png');
-
-        // Cargar sprites del jugador
+        this.load.image('powerup', 'assets/powerup.png');
+        this.load.image('bomb_left', 'assets/star.png');
+        
+        // Cargar spritesheet del jugador (mejora futura)
+        this.load.spritesheet('player_walk', 'assets/caminarp1/caminar_sheet.png', {
+            frameWidth: 64, frameHeight: 64, startFrame: 0, endFrame: 24
+        });
+        
+        // Usar cargas individuales como fallback
         for (let i = 1; i < 25; i++) {
             this.load.image(`sprite${i}`, `assets/caminarp1/caminar(${i}).png`);
         }
-
-
-        // Cargar sprites de salto
+        
+        // Sprites de salto
         for (let i = 1; i <= 12; i++) {
             this.load.image(`jump_i${i}`, `assets/caminarp1/saltoi(${i}).png`);
             this.load.image(`jump_D${i}`, `assets/caminarp1/saltod(${i}).png`);
         }
-
-
-	 for (let i = 0; i < 19; i++) {
-        this.load.image(`boss_${i}`, `assets/caminarp1/boss/${i}.webp`);
+        
+        // Boss sprites
+        for (let i = 0; i < 19; i++) {
+            this.load.image(`boss_${i}`, `assets/caminarp1/boss/${i}.webp`);
+        }
+        
+        for (let i = 0; i < 17; i++) {
+            this.load.image(`boss_atk${i}`, `assets/caminarp1/boss/${i}.png`);
+        }
     }
-    
-
-   	for (let i = 0; i < 17; i++) {
-   		this.load.image(`boss_atk${i}`, `assets/caminarp1/boss/${i}.png`);
-    }
-		
-
-		this.load.on('filecomplete', (key) => {
-			console.log(`🔥 Asset cargado: ${key}`);
-		});
-
-		this.load.on('loaderror', (file) => {
-				console.error(`Error cargando: ${file.key}`);
-		});
-
-		
-    }//preload
-
 
     create() {
-
-
-    	this.playerBombs = this.physics.add.group();
-   		this.powerups = this.physics.add.group();
-
-    this.input.once('pointerdown', () => {
-        if (this.sound.context.state === 'suspended') {
-            this.sound.context.resume();
-        }
-    });
-
-		
-        // Configuración inicial
+        // Inicialización
         this.score = 0;
         this.gameOver = false;
-
-
-       
-    
-        // Fondo y texto
-        this.add.image(400, 330, 'xibalba_bg');
-
-   this.setupPlatforms();
-    this.setupPlayer();
-    this.setupBombs();
-    this.setupBoss();
-    this.setupPowerups();
-    this.setupCollisions(); 
-        
-        // Interfaz
-        this.setupScore();
-        
-
-      	this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-      	
-        this.createBossHealthBar();
-        
-        // Animaciones del jefe
-        this.createBossAnimations();
-
-        
-
- 
-
-console.log('Texturas del jugador:', this.textures.get('sprite0'));
-    console.log('Texturas del boss:', this.textures.get('boss_0'));
-
-        
-    }//create
-
-
-
-setupPlatforms() {
-    // Grupo de plataformas fijas (estáticas)
-    this.platforms = this.physics.add.staticGroup();
-
-    // Suelo fijo
-    this.platforms.create(100, 595, 'ground').setScale(1).refreshBody();
-
-    // Grupo de plataformas móviles (dinámicas)
-    this.movingPlatforms = this.physics.add.group({
-        allowGravity: false,
-        immovable: true  // Para que no sean afectadas por el jugador
-    });
-
-    // Plataformas móviles con diferentes tamaños y movimientos
-    const movingPlatformsData = [
-        { x: 1100, y: 100, key: 'ground', scaleX: 1, moveX: 0, moveY: 510 }, //elevador
-        { x: 250, y: 355, key: 'ground2', scaleX: 0.8, moveX: 100, moveY: 0 }, // Vertical
-        { x: 600, y: 50, key: 'ground2', scaleX: 1.2, moveX: 120, moveY: 0 }, // Otra vertical
-    ];
-
-    movingPlatformsData.forEach(data => {
-        const platform = this.movingPlatforms.create(data.x, data.y, data.key);
-        platform.setScale(data.scaleX, 1);
-        platform.setImmovable(true); // No se mueve por colisiones
-
-        // Animación del movimiento
-        this.tweens.add({
-            targets: platform,
-            x: platform.x + data.moveX,  // Movimiento horizontal
-            y: platform.y + data.moveY,  // Movimiento vertical
-            ease: 'Linear',
-            duration: 13000,
-            yoyo: true,
-            repeat: -1
-        });
-    });
-}//plataforms
-
-    setupPlayer() {
-        this.player = this.physics.add.sprite(100, 450, 'sprite0');
-        this.player.setBounce(0.2);
-        this.player.setCollideWorldBounds(false);
-        
-        this.cursors = this.input.keyboard.createCursorKeys();
-
- this.player.body.onWorldBounds = true;
-    this.player.body.world.on('worldbounds', () => {
-        console.log('¡El jugador está chocando con los límites!');
-    });
-        
-        // Variables de animación
         this.currentFrame = 0;
         this.jumpFrame = 0;
         this.frameDelay = 0;
+        this.lastDirection = '';
+        this.playerBombs = this.physics.add.group();
+        this.powerups = this.physics.add.group();
+        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        
+        // Configuración del juego
+        this.add.image(400, 330, 'xibalba_bg');
+        
+        // Configuración de sistemas
+        this.setupPlatforms();
+        this.setupPlayer();
+        this.setupBoss();
+        this.setupBombs();
+        this.setupPowerups();
+        this.setupScore();
+        this.setupCollisions();
+        
+        // Interfaces
+        this.createBossHealthBar();
+        this.createBossAnimations();
+        
+        // Habilitar audio
+        this.input.once('pointerdown', () => {
+            if (this.sound.context.state === 'suspended') {
+                this.sound.context.resume();
+            }
+        });
+    }
+    
+    // SISTEMAS DEL JUEGO
+    
+    setupPlatforms() {
+        // Plataformas estáticas
+        this.platforms = this.physics.add.staticGroup();
+        this.platforms.create(100, 595, 'ground').setScale(1).refreshBody();
+        
+        // Plataformas móviles
+        this.movingPlatforms = this.physics.add.group({
+            allowGravity: false,
+            immovable: true
+        });
+        
+        const platformData = [
+            { x: 1100, y: 100, key: 'ground', scaleX: 1, moveX: 0, moveY: 510 },
+            { x: 250, y: 355, key: 'ground2', scaleX: 0.8, moveX: 100, moveY: 0 },
+            { x: 600, y: 50, key: 'ground2', scaleX: 1.2, moveX: 120, moveY: 0 }
+        ];
+        
+        platformData.forEach(data => {
+            const platform = this.movingPlatforms.create(data.x, data.y, data.key);
+            platform.setScale(data.scaleX, 1).setImmovable(true);
+            
+            this.tweens.add({
+                targets: platform,
+                x: platform.x + data.moveX,
+                y: platform.y + data.moveY,
+                ease: 'Linear',
+                duration: 13000,
+                yoyo: true,
+                repeat: -1
+            });
+        });
+    }
 
-		console.log(this.textures.exists('sprite0')); // Debe ser true
-
-       
-    }//setupPlayer
-
-
-
+    setupPlayer() {
+        this.player = this.physics.add.sprite(100, 450, 'sprite1');
+        this.player.setBounce(0.2);
+        this.player.setCollideWorldBounds(false);
+        this.cursors = this.input.keyboard.createCursorKeys();
+        
+        this.player.body.onWorldBounds = true;
+        this.physics.world.on('worldbounds', body => {
+            if (body.gameObject === this.player && body.y > this.game.config.height) {
+                this.time.delayedCall(1000, () => this.handleFallDamage());
+            }
+        });
+    }
+    
+    setupBoss() {
+        this.boss = this.physics.add.sprite(400, 537, 'boss_0')
+            .setCollideWorldBounds(true)
+            .setDepth(1);
+            
+        this.boss.body.setSize(120, 180);
+        this.boss.body.setOffset(30, 20);
+    }
+    
     setupBombs() {
         this.bombs = this.physics.add.group();
         
-        // Evento para generar bombas cada 5 segundos
         this.time.addEvent({
-            delay: 5000, // 5000 ms = 5 segundos
+            delay: 5000,
             callback: () => {
-                // Generar en posición aleatoria en el área visible (ajustar según tu tamaño de juego)
-                const x = Phaser.Math.Between(50, 750);
-                const y = 16; // Parte superior
+                if (this.gameOver) return;
                 
-                // Crear bomba con física
-                const bomb = this.bombs.create(x, y, 'bomb');
+                const x = Phaser.Math.Between(50, 750);
+                const bomb = this.bombs.create(x, 16, 'bomb');
                 bomb.setBounce(1);
                 bomb.setCollideWorldBounds(true);
-                
-                // Velocidad aleatoria en X y Y
                 bomb.setVelocity(
-                    Phaser.Math.Between(-200, 200), // Velocidad horizontal
-                    Phaser.Math.Between(50, 200) // Velocidad vertical (hacia abajo)
+                    Phaser.Math.Between(-200, 200),
+                    Phaser.Math.Between(50, 200)
                 );
                 
-                // Añadir efecto de rotación
                 this.tweens.add({
                     targets: bomb,
                     angle: 360,
@@ -216,527 +173,362 @@ setupPlatforms() {
             loop: true
         });
     }
-
-setupBoss() {
-    this.boss = this.physics.add.sprite(400, 537, 'boss_0')
-        .setCollideWorldBounds(true)
-        .setDepth(1);
-        
-    // Habilitar y ajustar físicas
-    this.boss.body.enable = true;
-    this.boss.body.setSize(120, 180);
-    this.boss.body.setOffset(30, 20); // Ajustar según necesidad
-}
-
-createBossAnimations() {
-    // Animación de aparición (frames 0-11 .webp)
-    this.anims.create({
-        key: 'boss_entrance',
-        frames: Array.from({length: 12}, (_, i) => ({ key: `boss_${i}` })),
-        frameRate: 10,
-        repeat: 0
-    });
-
-    // Animación idle/flotando (frames 12-18 .webp)
-    this.anims.create({
-        key: 'boss_idle',
-        frames: Array.from({length: 7}, (_, i) => ({ key: `boss_${i + 12}` })), // 12 a 18
-        frameRate: 8,
-        repeat: -1 // Cambiado a loop infinito
-    });
-
-    // Animación de ataque (frames 0-16 .png)
-    this.anims.create({
-        key: 'boss_atk',
-        frames: Array.from({length: 17}, (_, i) => ({ key: `boss_atk${i}` })), // 0 a 16
-        frameRate: 12,
-        repeat: 0
-    });
-
-    // Animación de muerte (frames 11-0 .webp)
-    this.anims.create({
-        key: 'boss_death',
-        frames: Array.from({length: 12}, (_, i) => ({ key: `boss_${11 - i}` })),
-        frameRate: 10,
-        repeat: 0
-    });
-
-    // Configurar ciclo de animaciones
-    this.boss.on('animationcomplete', (anim) => {
-        if (anim.key === 'boss_entrance') {
-            this.tweens.add({
-                targets: this.boss,
-                y: 300,
-                ease: 'Power2',
-                duration: 3000,
-                onComplete: () => {
-                    this.boss.play('boss_idle'); // Iniciar ciclo idle/ataque
+    
+    setupPowerups() {
+        this.time.addEvent({
+            delay: Phaser.Math.Between(10000, 15000),
+            callback: () => {
+                if (this.gameOver) return;
+                
+                const platform = Phaser.Math.RND.pick([
+                    ...this.platforms.getChildren(),
+                    ...this.movingPlatforms.getChildren()
+                ]);
+                
+                const powerup = this.powerups.create(platform.x, platform.y - 30, 'powerup');
+                powerup.setScale(0.05);
+                powerup.body.setSize(powerup.width * 0.5, powerup.height * 0.5);
+                powerup.body.setAllowGravity(false);
+                powerup.body.setImmovable(true);
+                
+                if (platform.body.moves) {
+                    this.tweens.add({
+                        targets: powerup,
+                        x: platform.x + platform.body.velocity.x,
+                        y: platform.y + platform.body.velocity.y - 30,
+                        duration: 50,
+                        repeat: -1
+                    });
                 }
+            },
+            callbackScope: this,
+            loop: true
+        });
+    }
+    
+    setupScore() {
+        this.scoreText = this.add.text(16, 16, 'Score: 0', { 
+            fontSize: '32px',
+            fill: '#FFF',
+            fontFamily: 'Mayan'
+        });
+        
+        this.livesText = this.add.text(16, 60, `Lives: ${globalData.lives || 3}`, {
+            fontSize: '32px',
+            fill: '#FF3300'
+        });
+    }
+    
+    setupCollisions() {
+        // Optimización: agrupar plataformas para reducir colisiones
+        const allPlatforms = [this.platforms, this.movingPlatforms];
+        
+        this.physics.add.collider([this.player, this.bombs, this.boss, this.playerBombs, this.powerups], allPlatforms);
+        
+        this.physics.add.overlap(this.player, this.powerups, this.collectPowerup, null, this);
+        this.physics.add.collider(this.player, this.bombs, this.hitBomb, null, this);
+        
+        this.physics.add.overlap(this.playerBombs, this.boss, (bomb, boss) => {
+            if (!bomb.active || this.bossInvulnerable) return;
+            
+            this.damageBoss(50);
+            bomb.destroy();
+            
+            this.bossInvulnerable = true;
+            this.time.delayedCall(500, () => this.bossInvulnerable = false);
+            
+            this.boss.setTint(0xFF0000);
+            this.time.delayedCall(100, () => this.boss.clearTint());
+        });
+    }
+    
+    // SISTEMAS DEL BOSS
+    
+    createBossAnimations() {
+        // Animaciones del boss optimizadas
+        const createAnim = (key, frames, frameRate, repeat = 0) => {
+            this.anims.create({
+                key,
+                frames,
+                frameRate,
+                repeat
             });
-        }
-        // Ciclo entre ataque y idle
-        if (anim.key === 'boss_atk') {
-            this.time.delayedCall(1000, () => {
-                this.boss.play('boss_idle');
-            });
-        }
-    });
-
-    // Iniciar animación de aparición
-    this.boss.play('boss_entrance');
-}
-
-
+        };
+        
+        createAnim('boss_entrance', 
+            Array.from({length: 12}, (_, i) => ({ key: `boss_${i}` })), 
+            10);
+            
+        createAnim('boss_idle', 
+            Array.from({length: 7}, (_, i) => ({ key: `boss_${i + 12}` })), 
+            8, -1);
+            
+        createAnim('boss_atk', 
+            Array.from({length: 17}, (_, i) => ({ key: `boss_atk${i}` })), 
+            12);
+            
+        createAnim('boss_death', 
+            Array.from({length: 12}, (_, i) => ({ key: `boss_${11 - i}` })), 
+            10);
+        
+        // Gestión de ciclo de animaciones
+        this.boss.on('animationcomplete', anim => {
+            if (anim.key === 'boss_entrance') {
+                this.tweens.add({
+                    targets: this.boss,
+                    y: 300,
+                    ease: 'Power2',
+                    duration: 3000,
+                    onComplete: () => this.boss.play('boss_idle')
+                });
+            }
+            
+            if (anim.key === 'boss_atk') {
+                this.time.delayedCall(1000, () => {
+                    if (this.boss.active) this.boss.play('boss_idle');
+                });
+            }
+        });
+        
+        this.boss.play('boss_entrance');
+    }
+    
     createBossHealthBar() {
         this.bossHealthBar = this.add.graphics();
         this.updateBossHealthBar();
     }
-
+    
     updateBossHealthBar() {
         this.bossHealthBar.clear();
-        
-        // Fondo
         this.bossHealthBar.fillStyle(0x444444);
         this.bossHealthBar.fillRect(100, 50, 400, 30);
         
-        // Salud actual
         this.bossHealthBar.fillStyle(0xFF3300);
         const width = (this.bossHealth / 1000) * 400;
         this.bossHealthBar.fillRect(50, 50, width, 30);
     }
-
-setupCollisions() {
-
-	this.physics.add.collider(this.player, this.movingPlatforms);
-    this.physics.add.collider(this.player, this.platforms);
-    this.physics.add.collider(this.bombs, this.movingPlatforms);
-    this.physics.add.collider(this.bombs, this.platforms);
-    this.physics.add.collider(this.boss, this.platforms);
-   	this.physics.add.collider(this.playerBombs, this.platforms);
-    this.physics.add.collider(this.playerBombs, this.movingPlatforms);
-
     
-    this.physics.add.overlap(this.player, this.powerups, this.collectPowerup, null, this);
-    this.physics.add.collider(this.player, this.bombs, this.hitBomb, null, this);
-
-     this.physics.add.collider(this.powerups, this.platforms);
-    this.physics.add.collider(this.powerups, this.movingPlatforms);
-
-
-
-this.physics.add.overlap(this.playerBombs, this.boss, (bomb, boss) => {
-    if (!bomb.active || this.bossInvulnerable) return;
+    damageBoss(amount) {
+        if (this.gameOver || this.bossHealth <= 0 || this.bossInvulnerable) return;
+        
+        this.bossHealth = Math.max(0, this.bossHealth - Math.min(amount, this.bossHealth));
+        this.updateBossHealthBar();
+        
+        this.boss.setTint(0xFF0000);
+        this.time.delayedCall(100, () => this.boss.clearTint());
+        
+        this.checkBossPhase();
+    }
     
-    this.damageBoss(50);
-    
-    // Efecto de invulnerabilidad
-    this.bossInvulnerable = true;
-    this.time.delayedCall(500, () => {
-        this.bossInvulnerable = false;
-    });
-    
-    // Debug visual
-    this.boss.setTint(0xFF0000);
-    this.time.delayedCall(100, () => this.boss.clearTint());
-});
-
-
-    
-}
-
-
-
-
-damageBoss(amount) {
-    if (this.gameOver || this.bossHealth <= 0 || this.bossInvulnerable) return;
-    
-    // Aplicar daño seguro
-    this.bossHealth = Math.max(0, this.bossHealth - Math.min(amount, this.bossHealth));
-    this.updateBossHealthBar();
-    
-    console.log(`Daño: ${amount} | Salud: ${this.bossHealth}`); // Debug
-    
-    // Efectos visuales sin cambiar animación principal
-    this.boss.setTint(0xFF0000);
-    this.time.delayedCall(100, () => this.boss.clearTint());
-    
-    this.checkBossPhase();
-}
-
-
-checkBossPhase() {
-    // Verificar si ya está derrotado
-    if (this.bossHealth <= 0) {
-    
-        if (!this.gameOver) {
-            // Forzar salud a 0 para evitar valores negativos
+    checkBossPhase() {
+        if (this.bossHealth <= 0) {
             this.bossHealth = 0;
             this.defeatBoss();
+            return;
         }
-        return;
-    }
-
-    // Fase 2 (600 de vida)
-    if (this.bossHealth <= 1000 && this.currentPhase === 1) {
-        this.currentPhase = 2;
-        console.log('¡Fase 2 activada!');
-        this.startPhaseTwo();
-    }
-
-    // Fase enfurecida (300 de vida)
-    if (this.bossHealth <= 300 && !this.isEnraged) {
-        this.isEnraged = true;
-        console.log('¡Fase enfurecida activada!');
-        this.startEnragedPhase();
+        
+        if (this.bossHealth <= 1000 && this.currentPhase === 1) {
+            this.currentPhase = 2;
+            this.startPhaseTwo();
+        }
+        
+        if (this.bossHealth <= 300 && !this.isEnraged) {
+            this.isEnraged = true;
+            this.startEnragedPhase();
+        }
     }
     
-    console.log(`FASE: ${this.currentPhase} | SALUD: ${this.bossHealth} | ENFURECIDO: ${this.isEnraged}`);
-}
-
-startPhaseTwo() {
-    this.currentPhase = 2;
-    
-    // Lanzar bombas durante el ataque
-    this.boss.on('animationupdate', (anim, frame) => {
-        if (anim.key === 'boss_atk' && frame.index === 9) { // Frame específico para disparar
-            const bomb = this.bombs.create(this.boss.x + 50, this.boss.y - 50, 'bomb');
-            bomb.setVelocity(Phaser.Math.Between(-300, 300), -250);
-        }
-    });
-
-    // Programar ataques
-    this.time.addEvent({
-        delay: 3000, // Cada 3 segundos
-        callback: () => {
-            if (!this.gameOver) {
-                this.boss.play('boss_atk');
+    startPhaseTwo() {
+        this.boss.on('animationupdate', (anim, frame) => {
+            if (anim.key === 'boss_atk' && frame.index === 9) {
+                const bomb = this.bombs.create(this.boss.x + 50, this.boss.y - 50, 'bomb');
+                bomb.setVelocity(Phaser.Math.Between(-300, 300), -250);
             }
-        },
-        loop: true
-    });
-}
-
-    startEnragedPhase() {
-        this.isEnraged = true;
-        this.boss.setTint(0xFF0000);
+        });
         
         this.time.addEvent({
-            delay: 1000,
+            delay: 3000,
             callback: () => {
+                if (!this.gameOver && this.boss.active) this.boss.play('boss_atk');
             },
             loop: true
         });
     }
-
-
-    update() {
-
-    if (this.gameOver) return;
-
-    const { left, right, up } = this.cursors;
-    const player = this.player;
-    const isGrounded = player.body.touching.down;
-
-    player.setVelocityX(0);
-
-    // Movimiento izquierda
-    if (left.isDown) {
-        player.setVelocityX(-this.playerSpeed);
-        player.setFlipX(false);  // ¡Nuevo! Voltea el sprite
-        this.animateWalk(0, 12);
-    } 
-    // Movimiento derecha
-    else if (right.isDown) {
-        player.setVelocityX(this.playerSpeed);
-        player.setFlipX(false); // ¡Nuevo! Restaura orientación
-        this.animateWalk(16, 25);
-    } 
-    // Idle
-    else {
-        // Mantener última dirección
-        player.setTexture(this.lastDirection.startsWith('0-12') ? 'sprite12' : 'sprite16');
-    }
-
-    // Salto
-    if (up.isDown && isGrounded) {
-        player.setVelocityY(this.jumpForce);
-        this.handleJumpAnimation(left.isDown, right.isDown);
-    }
-
-    // Comportamiento del jefe en fase 2
-    if (this.currentPhase === 2) {
-        this.boss.x += Math.sin(this.time.now * 0.002) * 2.5;
+    
+    startEnragedPhase() {
+        this.isEnraged = true;
+        this.boss.setTint(0xFF0000);
     }
     
-    // Comportamiento del jefe enfurecido
-    if (this.isEnraged) {
-        this.boss.rotation += 0.02; // Efecto visual de enfurecimiento
-    }
-
-
-  if(this.isPowerUpActive && this.time.now > this.powerUpTime) {
-        this.isPowerUpActive = false;
-        this.isInvincible = false; // Desactivar invencibilidad
-        this.player.clearTint();
-        this.playerSpeed = 160;
-    }
-
-this.physics.world.on('worldbounds', (body) => {
-    if (body.gameObject === this.player) {
-        // Si el jugador se sale por abajo, esperar antes de terminar el juego
-        this.time.delayedCall(1000, () => {  // Esperar 2 segundos
-            this.gameOver();
-        });
-    }
-});
-
-if (this.player.y > 700) {
-        this.handleFallDamage();
-    }
-
- if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-          this.throwBomb();
-      }
-      
-    this.isFacingLeft = this.cursors.left.isDown;
-   
-           console.log('Estado del jefe:',
-    `Visible: ${this.boss.visible}`,
-    `Salud: ${this.bossHealth}`,
-    `Animación: ${this.boss.anims.currentAnim?.key}`
-	);
-}//update
-
-
-
-
-
-    handlePlayerMovement() {
-        const isGrounded = this.player.body.touching.down;
-        const isJumping = this.cursors.up.isDown && isGrounded;
-        const isMovingRight = this.cursors.right.isDown;
-        const isMovingLeft = this.cursors.left.isDown;
-
-        if (isJumping) {
-            this.player.setVelocityY(this.jumpForce);
-        }
-
-        if (isJumping && isMovingRight) {
-            this.animateJump("jump_i", 0, 12);
-        } else if (isJumping && isMovingLeft) {
-            this.animateJump("jump_D", 0, 12);
-        } else if (isMovingLeft) {
-            this.player.setVelocityX(-this.playerSpeed);
-            this.animateWalk(0, 12);
-        } else if (isMovingRight) {
-            this.player.setVelocityX(this.playerSpeed);
-            this.animateWalk(16, 25);
-        } else {
-            this.player.setVelocityX(0);
-            this.player.setTexture('sprite12');
-        }
-    }
-
-
-animateWalk(start, end) {
-    // Reiniciar el contador si cambia de dirección
-    if (this.lastDirection !== `${start}-${end}`) {
-        this.currentFrame = start;
-        this.lastDirection = `${start}-${end}`;
-    }
-
-    // Avanzar frames cada 5 updates (ajusta este valor para velocidad)
-    if (this.frameDelay % 5 === 0) {
-        this.currentFrame = Phaser.Math.Wrap(this.currentFrame + 1, start, end + 1);
-        this.player.setTexture(`sprite${this.currentFrame}`);
-    }
-    this.frameDelay++;
-}
-
-
-animateJump(prefix, start, end) {
-    if (this.frameDelay % 5 === 0) {
-        this.jumpFrame = Phaser.Math.Wrap(
-            prefix === "jump_D" ? this.jumpFrame - 1 : this.jumpFrame + 1,
-            start,
-            end + 1
-        );
-        console.log(`Saltando - Frame: ${prefix}${this.jumpFrame}`); // Debug
-        this.player.setTexture(`${prefix}${this.jumpFrame}`);
-    }
-    this.frameDelay++;
-}
-
-
-    spawnBomb() {
-        const x = this.player.x < 400 
-            ? Phaser.Math.Between(400, 800) 
-            : Phaser.Math.Between(0, 400);
+    defeatBoss() {
+        this.gameOver = true;
+        this.boss.play('boss_death');
         
-        const bomb = this.bombs.create(x, 16, 'bomb');
-        bomb.setBounce(1).setVelocity(Phaser.Math.Between(-200, 200), 20);
-    }
-
-
-
-hitBomb(player, bomb) {
-    if (this.gameOver || this.isInvincible) { // Añade condición de invencibilidad
-        return; // Salir sin aplicar daño
-    }
-    
-    // Resto del código original para cuando NO es invencible
-    globalData.lives--;
-    this.livesText.setText(`Lives: ${globalData.lives}`);
-    
-    if (globalData.lives <= 0) {
-        this.physics.pause();
-        player.setTint(0xff0000);
-        this.gameOver = true;
-    } else {
-        player.setPosition(100, 450);
-        player.setVelocity(0, 0);
-        player.clearTint();
-    }
-}
-
-
-defeatBoss() {
-    console.log('¡Jefe derrotado!');
-    this.gameOver = true;
-    this.boss.play('boss_death'); // Usar la clave correcta
-    
-    // Efecto visual
-    this.boss.setTint(0xFF0000);
-    
-    this.time.delayedCall(2000, () => {
-        this.cameras.main.fadeOut(1000, 0, 0, 0);
-    });
-}//defeatBoss
-
-	setupScore() {
-    this.scoreText = this.add.text(16, 16, 'Score: 0', { 
-        fontSize: '32px', 
-        fill: '#FFF', // Cambié el color a blanco para que combine con Xibalba
-        fontFamily: 'Mayan'
-    });
-
-			this.livesText = this.add.text(16, 60, `Lives: ${globalData.lives}`,  {
-			fontSize: '32px',
-			fill: '#FF3300'
-    });
-    
-	}//setupScore
-
-
-
-		handleJumpAnimation(isMovingLeft, isMovingRight) {
-			if (isMovingLeft)	{	this.animateJump("jump_D", 0, 12);
-			}else if (isMovingRight) {	this.animateJump("jump_i", 0, 12);	}
-		}
-
-		
-
-	handleFallDamage() {
-    if (this.gameOver) return;
-    
-    globalData.lives--;
-    this.livesText.setText(`Lives: ${globalData.lives}`);
-    
-    // Efectos de caída
-    this.cameras.main.shake(300, 0.02);
-    this.player.setVelocity(0, 0);
-    
-    if (globalData.lives <= 0) {
-        this.gameOver = true;
-        this.showGameOver();
-    } else {
-        // Respawn seguro
-        this.player.setPosition(100, 450);
-        this.time.delayedCall(500, () => {
-            this.player.clearTint();
+        this.time.delayedCall(2000, () => {
+            this.cameras.main.fadeOut(1000, 0, 0, 0);
+            this.time.delayedCall(1000, () => {
+                this.scene.start('Victoria', {
+                    score: this.score
+                });
+            });
         });
     }
-}
-
-
-setupPowerups() {
-    // Generar power-up cada 10-15 segundos
-    this.time.addEvent({
-        delay: Phaser.Math.Between(10000, 15000),
-        callback: () => {
-            const platform = Phaser.Math.RND.pick([
-                ...this.platforms.getChildren(), 
-                ...this.movingPlatforms.getChildren()
-            ]);
-            
-            const powerup = this.powerups.create(platform.x, platform.y - 30, 'powerup');
-            
-            // Ajustar el tamaño aquí
-            powerup.setScale(0.05)
-            powerup.body.setSize(
-                powerup.width * 0.5, // Ancho ajustado
-                powerup.height * 0.5 // Alto ajustado
+    
+    // JUGADOR Y CONTROLES
+    
+    animateWalk(start, end) {
+        if (this.lastDirection !== `${start}-${end}`) {
+            this.currentFrame = start;
+            this.lastDirection = `${start}-${end}`;
+        }
+        
+        if (this.frameDelay % 5 === 0) {
+            this.currentFrame = Phaser.Math.Wrap(this.currentFrame + 1, start, end + 1);
+            this.player.setTexture(`sprite${this.currentFrame}`);
+        }
+        this.frameDelay++;
+    }
+    
+    animateJump(prefix, start, end) {
+        if (this.frameDelay % 5 === 0) {
+            this.jumpFrame = Phaser.Math.Wrap(
+                prefix === "jump_D" ? this.jumpFrame - 1 : this.jumpFrame + 1,
+                start, end + 1
             );
-            
-            powerup.body.setAllowGravity(false);
-            powerup.body.setImmovable(true);
-            
-            // Si la plataforma es móvil
-            if (platform.body.moves) {
-                this.tweens.add({
-                    targets: powerup,
-                    x: platform.x + platform.body.velocity.x,
-                    y: platform.y + platform.body.velocity.y - 30,
-                    duration: 50,
-                    repeat: -1
-                });
-            }
-        },
-        loop: true
-    });
+            this.player.setTexture(`${prefix}${this.jumpFrame}`);
+        }
+        this.frameDelay++;
+    }
+    
+    throwBomb() {
+        if (!this.canThrow) return;
+        
+        const bomb = this.playerBombs.create(
+            this.player.x + (this.isFacingLeft ? -40 : 40),
+            this.player.y - 30,
+            this.isFacingLeft ? 'bomb_left' : 'bomb'
+        );
+        
+        bomb.setScale(0.8);
+        bomb.setVelocityX(this.isFacingLeft ? -600 : 600);
+        bomb.setVelocityY(-300);
+        bomb.setGravityY(800);
+        bomb.setBounce(0.3);
+        
+        this.canThrow = false;
+        this.time.delayedCall(1000, () => this.canThrow = true);
+    }
+    
+    hitBomb(player, bomb) {
+        if (this.gameOver || this.isInvincible) return;
+        
+        bomb.destroy();
+        
+        globalData.lives--;
+        this.livesText.setText(`Lives: ${globalData.lives}`);
+        
+        if (globalData.lives <= 0) {
+            this.physics.pause();
+            player.setTint(0xff0000);
+            this.gameOver = true;
+            this.time.delayedCall(1000, () => {
+                this.scene.start('GameOver', { score: this.score });
+            });
+        } else {
+            player.setPosition(100, 450);
+            player.setVelocity(0, 0);
+            player.clearTint();
+        }
+    }
+    
+    handleFallDamage() {
+        if (this.gameOver) return;
+        
+        globalData.lives--;
+        this.livesText.setText(`Lives: ${globalData.lives}`);
+        
+        this.cameras.main.shake(300, 0.02);
+        this.player.setVelocity(0, 0);
+        
+        if (globalData.lives <= 0) {
+            this.gameOver = true;
+            this.time.delayedCall(1000, () => {
+                this.scene.start('GameOver', { score: this.score });
+            });
+        } else {
+            this.player.setPosition(100, 450);
+            this.time.delayedCall(500, () => {
+                this.player.clearTint();
+            });
+        }
+    }
+    
+    collectPowerup(player, powerup) {
+        powerup.destroy();
+        this.isPowerUpActive = true;
+        this.isInvincible = true;
+        
+        player.setTint(0x00FF00);
+        this.playerSpeed *= 1.5;
+        
+        this.powerUpTime = this.time.now + 10000;
+    }
+    
+    update() {
+        if (this.gameOver) return;
+        
+        const { left, right, up } = this.cursors;
+        const isGrounded = this.player.body.touching.down;
+        
+        // Control del jugador
+        this.player.setVelocityX(0);
+        
+        if (left.isDown) {
+            this.player.setVelocityX(-this.playerSpeed);
+            this.player.setFlipX(true);
+            this.animateWalk(0, 12);
+            this.isFacingLeft = true;
+        } else if (right.isDown) {
+            this.player.setVelocityX(this.playerSpeed);
+            this.player.setFlipX(false);
+            this.animateWalk(16, 25);
+            this.isFacingLeft = false;
+        } else {
+            this.player.setTexture(this.lastDirection.startsWith('0-12') ? 'sprite12' : 'sprite16');
+        }
+        
+        if (up.isDown && isGrounded) {
+            this.player.setVelocityY(this.jumpForce);
+            this.animateJump(left.isDown ? "jump_D" : "jump_i", 0, 12);
+        }
+        
+        // Controles especiales
+        if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+            this.throwBomb();
+        }
+        
+        // Caída
+        if (this.player.y > 700) {
+            this.handleFallDamage();
+        }
+        
+        // Boss updates
+        if (this.currentPhase === 2) {
+            this.boss.x += Math.sin(this.time.now * 0.002) * 2.5;
+        }
+        
+        if (this.isEnraged) {
+            this.boss.rotation += 0.02;
+        }
+        
+        // PowerUp timing
+        if (this.isPowerUpActive && this.time.now > this.powerUpTime) {
+            this.isPowerUpActive = false;
+            this.isInvincible = false;
+            this.player.clearTint();
+            this.playerSpeed = 160;
+        }
+    }
 }
 
-
-collectPowerup(player, powerup) {
-
-	powerup.destroy();
-    this.isPowerUpActive = true;
-    this.isInvincible = true; // Activar invencibilidad
-    
-    // Efectos visuales
-    player.setTint(0x00FF00); // Tinte verde
-    this.playerSpeed *= 1.5;
-    
-    // Temporizador para duración del powerup
-    this.powerUpTime = this.time.now + 10000; // 10 segundos
-    
-    // Sonido opcional
-    // this.sound.play('powerup_sound');
-}
-
-
-throwBomb() {
-    if (!this.canThrow) return;
-
-    const bomb = this.playerBombs.create(
-        this.player.x + (this.isFacingLeft ? -40 : 40),
-        this.player.y - 30,
-        this.isFacingLeft ? 'bomb_left' : 'bomb'
-    );
-
-    bomb.setScale(0.8);
-    bomb.setVelocityX(this.isFacingLeft ? -600 : 600);
-    bomb.setVelocityY(-300);
-    bomb.setGravityY(800);
-    bomb.setBounce(0.3);
-    
-    // Cooldown de 1 segundo
-    this.canThrow = false;
-    this.time.delayedCall(1000, () => this.canThrow = true);
-}
-
-
-}//clase
-
-// Hacer disponible la clase globalmente
 window.FinalLevel = FinalLevel;
