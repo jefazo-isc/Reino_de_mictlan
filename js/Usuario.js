@@ -84,7 +84,10 @@ class Usuario extends Phaser.Scene {
         .on('pointerdown', () => {
             // Los caracteres permitidos
             const aliasRegex = /^[A-Za-z0-9_]{4,8}$/;
-            
+            globalData.registrado = new Date().toISOString().slice(0, 10);
+            globalData.score = 0;
+            globalData.lives = 3;
+            globalData.currentLevel = 1;
             // verificamos que cumpla con el formato
             if (aliasRegex.test(aliasString)) {
                 // se revisa si ya existe en localStorage
@@ -98,13 +101,11 @@ class Usuario extends Phaser.Scene {
 
                     // Asigna alias y score a la variable global
                     globalData.alias = aliasString;
-                    globalData.score = 0;
+                    
                     this.scene.start('Seleccionpersonaje', globalData);
                 } else {
                     globalData.alias = aliasString;
-                    globalData.score = 0;
-                    globalData.lives = 3;
-                    globalData.currentLevel = 1;
+                    
                     this.scene.start('Seleccionpersonaje', globalData); //Historia1
                 }
             } else {

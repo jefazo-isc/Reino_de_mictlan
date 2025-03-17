@@ -48,9 +48,21 @@ class Puente extends Phaser.Scene {
         this.musica.play();
         this.vidas = new Vidas(this, 90, 70);
         globalData.vidas = this.vidas.vidas; // Mantener sincronizado
-        this.alias = this.add.text(260, 15, 'Jugador:' + globalData.alias, {
+        globalData.currentLevel = 2;
+        this.alias = this.add.text(190, 15, 'Jugador: ' + globalData.alias, {
             fontSize: '32px',
             fill: '#fff',
+        });
+        this.fechaText = this.add.text(470, 16, 'Fecha: ' + globalData.registrado, { 
+            fontSize: '32px',
+            fill: '#FFF',
+            fontFamily: 'Mayan'
+        });
+        
+        this.nivelText = this.add.text(16, 155, 'Nivel: ' + globalData.currentLevel, { 
+            fontSize: '32px',
+            fill: '#FFF',
+            fontFamily: 'Mayan'
         });
         this.setupPlatforms();
         this.setupPlayer();
