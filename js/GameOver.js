@@ -72,7 +72,7 @@ class GameOver extends Phaser.Scene {
             volverMenu.alpha = 1;
         });
 
-        const volverButton = this.add.text(500, 520, 'VOLVER A INTENTARLO', {
+        const volverButton = this.add.text(420, 520, 'VOLVER A INTENTARLO', {
             fontSize: '30px',
             padding: { left: 5, right: 5, top: 5, bottom: 5 },
             fontFamily: 'Mayan',
@@ -120,12 +120,19 @@ class GameOver extends Phaser.Scene {
         if (localStorage.getItem(globalData.alias)) {
             let registro = JSON.parse(localStorage.getItem(globalData.alias));
             
-            // Actualizamos solo si el score actual es mayor que el anterior
             if (globalData.score > registro.score) {
                 registro.score = globalData.score;
                 registro.registrado = new Date().toISOString().slice(0, 10);
                 localStorage.setItem(globalData.alias, JSON.stringify(registro));
             }
+        } else {
+            // Alias nuevo; se guarda todo
+            const nuevoRegistro = {
+                alias: globalData.alias,
+                score: globalData.score,
+                registrado: new Date().toISOString().slice(0, 10)
+            };
+            localStorage.setItem(globalData.alias, JSON.stringify(nuevoRegistro));
         }
     }
 }

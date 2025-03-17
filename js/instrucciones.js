@@ -17,7 +17,7 @@ function dibujar() {
     ctx.strokeStyle = '#e9bb4f'; 
     ctx.lineWidth = 5; 
 
-    ctx.font = '30px Mayan';
+    ctx.font = '25px Mayan';
 
     ctx.fillText('Como jugar?', canvas.width / 2, 150);
     ctx.strokeText('Como jugar?', canvas.width / 2, 150);
@@ -48,7 +48,7 @@ function dibujar() {
     ctx.lineWidth = 1.5; 
 
 
-    ctx.font = '30px Mayan';
+    ctx.font = '25px Mayan';
 
     ctx.fillText('Como jugar?', canvas.width / 2, 150);
     ctx.strokeText('Como jugar?', canvas.width / 2, 150);
