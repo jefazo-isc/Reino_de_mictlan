@@ -58,6 +58,7 @@ class FinalLevel extends Phaser.Scene {
         this.load.audio('boss_hit', '../assets/sonido/hurt1.wav');
         this.load.audio('power_up', '../assets/sonido/collect.wav');
         this.load.audio('boss_music', '../assets/sonido/battle.wav');
+        this.load.audio('fire', '../assets/sonido/fire_ball.wav');
     }
 
     create() {
@@ -448,6 +449,7 @@ class FinalLevel extends Phaser.Scene {
             if (anim.key === 'boss_atk' && frame.index === 9) {
                 const bomb = this.bombs.create(this.boss.x + 50, this.boss.y - 50, 'bomb');
                 bomb.setVelocity(Phaser.Math.Between(-300, 300), -250);
+                this.sound.play('fire');
             }
         });
         
