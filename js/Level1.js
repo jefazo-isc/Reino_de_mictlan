@@ -71,9 +71,21 @@ class Level1 extends Phaser.Scene {
         this.gameOver = false;
         this.add.image(400, 300, 'sky');
         this.vidas = new Vidas(this, 90, 70, globalData.vidas);
-        this.alias = this.add.text(260, 15, 'Jugador:' + globalData.alias, {
+        globalData.currentLevel = 1;
+        this.alias = this.add.text(190, 15, 'Jugador: ' + globalData.alias, {
             fontSize: '32px',
             fill: '#fff',
+        });
+        this.fechaText = this.add.text(470, 16, 'Fecha: ' + globalData.registrado, { 
+            fontSize: '32px',
+            fill: '#FFF',
+            fontFamily: 'Mayan'
+        });
+        
+        this.nivelText = this.add.text(16, 100, 'Nivel: ' + globalData.currentLevel, { 
+            fontSize: '32px',
+            fill: '#FFF',
+            fontFamily: 'Mayan'
         });
         globalData.vidas = this.vidas.vidas; // Sincronizar al inicio
         this.setupPlatforms();
