@@ -238,7 +238,7 @@ class Puente extends Phaser.Scene {
                 yoyo: true
             });
 
-            if (this.lanzasRecogidas >= 3) this.endLevel();
+            if (this.lanzasRecogidas >= 10) this.endLevel();
         }
     }
 
