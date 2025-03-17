@@ -55,9 +55,9 @@ class FinalLevel extends Phaser.Scene {
         
         // Audio
         this.load.audio('hurt', '../assets/sonido/hurt_male.wav');
-        this.load.audio('boss_hit', '../assets/sonido/hurt_male.wav');
-        this.load.audio('power_up', '../assets/sonido/hurt_male.wav');
-        this.load.audio('boss_music', '../assets/sonido/hurt_male.wav');
+        this.load.audio('boss_hit', '../assets/sonido/hurt1.wav');
+        this.load.audio('power_up', '../assets/sonido/collect.wav');
+        this.load.audio('boss_music', '../assets/sonido/battle.wav');
     }
 
     create() {
@@ -347,7 +347,6 @@ class FinalLevel extends Phaser.Scene {
             this.time.delayedCall(100, () => {
                 if (this.boss && this.boss.active) this.boss.clearTint();
             });
-            
             this.sound.play('boss_hit');
         });
     }
@@ -473,12 +472,11 @@ class FinalLevel extends Phaser.Scene {
         this.time.delayedCall(2000, () => {
             this.musica.stop();
             this.cameras.main.fadeOut(1000, 0, 0, 0);
+            this.musica.stop();
             this.time.delayedCall(1000, () => {
                 globalData.score = this.score;
                 globalData.vidas = this.vidas.vidas;
-                this.scene.start('Victoria', {
-                    score: this.score
-                });
+                this.scene.start('Victoria', globalData);
             });
         });
     }
