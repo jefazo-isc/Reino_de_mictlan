@@ -142,7 +142,7 @@ class Level1 extends Phaser.Scene {
         });
 
         // Transición a Puente
-        this.time.delayedCall(5000, () => {
+        this.time.delayedCall(40000, () => {
             globalData.score = this.score;
             globalData.vidas = this.vidas.vidas; // Guardar estado actual
             this.musica.stop();
