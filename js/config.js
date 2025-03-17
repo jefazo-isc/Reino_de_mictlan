@@ -22,7 +22,7 @@ const config = {
         default: 'arcade',
         arcade: { gravity: { y: 300 }, debug: false }
     },
-    scene: [ Presentacion, MainMenu,Usuario,Records, Creditos, Seleccionpersonaje,Level1, Level2,Historia1, Puente, GameOver, Victoria, FinalLevel],
+    scene: [ Presentacion, MainMenu,Usuario,Records, Creditos, Seleccionpersonaje,Level1, Level2,Historia1, Puente, Historia2, GameOver, Victoria, FinalLevel],
 };
 
 const game = new Phaser.Game(config);

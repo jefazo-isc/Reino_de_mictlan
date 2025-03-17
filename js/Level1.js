@@ -146,7 +146,7 @@ class Level1 extends Phaser.Scene {
             globalData.score = this.score;
             globalData.vidas = this.vidas.vidas; // Guardar estado actual
             this.musica.stop();
-            this.scene.start('Puente');
+            this.scene.start('Historia2');
         });
     }
 
