@@ -227,7 +227,7 @@ class FinalLevel extends Phaser.Scene {
     }
 
     setupBoss() {
-        this.boss = this.physics.add.sprite(400, 537, 'boss_0')
+        this.boss = this.physics.add.sprite(400, 290, 'boss_0')
             .setCollideWorldBounds(true)
             .setDepth(1)
             .setImmovable(true);
@@ -337,7 +337,7 @@ class FinalLevel extends Phaser.Scene {
         this.physics.add.overlap(this.playerBombs, this.boss, (bomb, boss) => {
             if (!bomb.active || this.bossInvulnerable || !boss.active) return;
             
-            this.damageBoss(50);
+            this.damageBoss(200);
             this.bossInvulnerable = true;
             this.time.delayedCall(500, () => {
                 if (this.scene.isActive()) this.bossInvulnerable = false;
