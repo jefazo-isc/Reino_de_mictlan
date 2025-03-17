@@ -1,7 +1,8 @@
 class FinalLevel extends Phaser.Scene {
     constructor() {
         super({ key: 'FinalLevel' });
-        
+        this.isPaused = false;
+
         // Variables del jefe
         this.bossHealth = 1000;
         this.currentPhase = 1;
@@ -64,7 +65,7 @@ class FinalLevel extends Phaser.Scene {
         this.characterConfig = {
             idleFrame: this.characterPrefix === 'p1' ? 'caminar1' : 'caminar13',
             walkFrames: {
-                left: this.characterPrefix === 'p1' ? { start: 1, end: 12 } : { start: 13, end: 24 },
+                left: this.characterPrefix === 'p1' ? { start: 13, end: 24 } : { start: 13, end: 24 },
                 right: this.characterPrefix === 'p1' ? { start: 1, end: 12 } : { start: 13, end: 24 }
             },
             jumpFrames: {
@@ -72,7 +73,8 @@ class FinalLevel extends Phaser.Scene {
                 right: 'saltod'
             }
         };
-
+        this.createPauseButton();
+ 
         // Inicialización del juego
         this.score = globalData.score || 0;
         this.gameOver = false;
@@ -150,6 +152,67 @@ class FinalLevel extends Phaser.Scene {
                 repeat: -1
             });
         });
+    }
+
+    createPauseButton() {
+        this.pauseButton = this.add.text(750, 30, '⏸', {
+            fontSize: '32px',
+            fill: '#fff',
+            backgroundColor: '#00000055',
+            padding: { x: 10, y: 5 }
+        })
+        .setOrigin(0.5)
+        .setInteractive()
+        .on('pointerdown', () => this.togglePause())
+        .setDepth(1000);
+    }
+
+    togglePause() {
+        if (!this.gameOver) {
+            this.isPaused = !this.isPaused;
+            
+            if (this.isPaused) {
+                this.physics.world.pause();
+                this.time.paused = true;
+                if (this.musica && this.musica.isPlaying) this.musica.pause();
+                this.showPauseMenu();
+            } else {
+                this.physics.world.resume();
+                this.time.paused = false;
+                if (this.musica && !this.musica.isPlaying) this.musica.resume();
+                this.hidePauseMenu();
+            }
+        }
+    }
+
+    showPauseMenu() {
+        this.pauseOverlay = this.add.graphics(400, 300, 800, 600, 0x000000, 0.7)
+            .setDepth(999);
+
+        this.resumeButton = this.add.text(400, 300, 'Reanudar', {
+            fontSize: '48px',
+            fill: '#fff',
+            backgroundColor: '#000000',
+            padding: { x: 20, y: 10 }
+        })
+        .setOrigin(0.5)
+        .setInteractive()
+        .on('pointerdown', () => this.togglePause())
+        .setDepth(1000);
+
+        this.pauseText = this.add.text(400, 200, 'PAUSA', {
+            fontSize: '64px',
+            fill: '#FFD700',
+            fontStyle: 'bold'
+        })
+        .setOrigin(0.5)
+        .setDepth(1000);
+    }
+
+    hidePauseMenu() {
+        this.pauseOverlay.destroy();
+        this.resumeButton.destroy();
+        this.pauseText.destroy();
     }
 
     setupPlayer() {
@@ -486,7 +549,6 @@ class FinalLevel extends Phaser.Scene {
         this.vidas.vidaperdida();
         globalData.vidas = this.vidas.vidas;
         
-        this.sound.play('hurt');
         this.cameras.main.shake(300, 0.02);
         this.player.setVelocity(0, 0);
         
@@ -517,7 +579,7 @@ class FinalLevel extends Phaser.Scene {
     }
 
     update() {
-        if (this.gameOver) return;
+        if (this.gameOver || this.isPaused) return;
 
         const { left, right, up } = this.cursors;
         const isGrounded = this.player.body.touching.down;
