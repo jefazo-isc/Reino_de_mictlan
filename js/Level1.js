@@ -325,7 +325,25 @@ class Level1 extends Phaser.Scene {
         globalData.score = this.score;
 
         if (this.stars.countActive(true) === 0) {
+            this.respawnStars(); // Llamar a nuevo método de respawn
         }
+    }
+
+    respawnStars() {
+        // Crear nuevas flores en posiciones aleatorias
+        for (let i = 0; i < 12; i++) {
+            const x = Phaser.Math.Between(50, 750);
+            const y = Phaser.Math.Between(0, 300);
+            const star = this.stars.get(x, y);
+            
+            if (star) {
+                star.enableBody(true, x, y, true, true);
+                star.setBounceY(0.2 + Math.random() * 0.3);
+            }
+        }
+        
+        // Añadir física a las nuevas flores
+        this.physics.add.collider(this.stars, this.platforms);
     }
 
     hitBomb(player, bomb) {
