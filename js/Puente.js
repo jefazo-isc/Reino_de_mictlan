@@ -61,7 +61,7 @@ class Puente extends Phaser.Scene {
 
         // Eventos temporales
         this.time.addEvent({
-            delay: 1000,
+            delay: 500,
             callback: this.spawnLanzas,
             callbackScope: this,
             loop: true
@@ -183,11 +183,11 @@ class Puente extends Phaser.Scene {
 
     spawnLanzas() {
         const directions = [
-            { x: Phaser.Math.Between(0, 800), y: -50, velocityX: 0, velocityY: 100, rotation: 0, gravity: true },
-            { x: -50, y: Phaser.Math.Between(0, 600), velocityX: 300, velocityY: 0, rotation: -Math.PI / 2, gravity: false },
-            { x: 850, y: Phaser.Math.Between(0, 600), velocityX: -300, velocityY: 0, rotation: Math.PI / 2, gravity: false },
-            { x: -50, y: Phaser.Math.Between(-100, 300), velocityX: 300, velocityY: 100, rotation: -Math.PI / 4, gravity: true },
-            { x: 850, y: Phaser.Math.Between(-100, 300), velocityX: -300, velocityY: 100, rotation: Math.PI / 4, gravity: true }
+            { x: Phaser.Math.Between(0, 800), y: -50, velocityX: 0, velocityY: 200, rotation: 0, gravity: true },
+            { x: -50, y: Phaser.Math.Between(0, 600), velocityX: 350, velocityY: 0, rotation: -Math.PI / 2, gravity: false },
+            { x: 850, y: Phaser.Math.Between(0, 600), velocityX: -350, velocityY: 0, rotation: Math.PI / 2, gravity: false },
+            { x: -50, y: Phaser.Math.Between(-100, 300), velocityX: 350, velocityY: 200, rotation: -Math.PI / 4, gravity: true },
+            { x: 850, y: Phaser.Math.Between(-100, 300), velocityX: -350, velocityY: 200, rotation: Math.PI / 4, gravity: true }
         ];
 
         const direction = Phaser.Math.RND.pick(directions);
