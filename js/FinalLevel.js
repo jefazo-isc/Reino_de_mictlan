@@ -219,16 +219,10 @@ class FinalLevel extends Phaser.Scene {
 
     setupPlayer() {
         this.player = this.physics.add.sprite(100, 450, this.characterConfig.idleFrame);
-        this.player.setBounce(0.2);
-        this.player.setCollideWorldBounds(false);
+        this.player.setCollideWorldBounds(true);
         this.cursors = this.input.keyboard.createCursorKeys();
-        
-        this.player.body.onWorldBounds = true;
-        this.physics.world.on('worldbounds', body => {
-            if (body.gameObject === this.player && body.y > this.game.config.height) {
-                this.handleFallDamage();
-            }
-        });
+    
+    
     }
 
     setupBoss() {
@@ -544,28 +538,7 @@ class FinalLevel extends Phaser.Scene {
         }
     }
 
-    handleFallDamage() {
-        if (this.gameOver || this.isInvincible) return;
-        
-        this.vidas.vidaperdida();
-        globalData.vidas = this.vidas.vidas;
-        
-        this.cameras.main.shake(300, 0.02);
-        this.player.setVelocity(0, 0);
-        
-        if (this.vidas.vidas <= 0) {
-            this.gameOver = true;
-            this.musica.stop();
-            this.time.delayedCall(1000, () => {
-                globalData.score = this.score;
-                this.scene.start('GameOver', { score: this.score });
-            });
-        } else {
-            this.player.setPosition(100, 450);
-            this.player.setTint(0xff0000);
-            this.time.delayedCall(500, () => this.player.clearTint());
-        }
-    }
+
 
     collectPowerup(player, powerup) {
         powerup.destroy();
@@ -613,10 +586,7 @@ class FinalLevel extends Phaser.Scene {
             this.throwBomb();
         }
         
-        // Caída
-        if (this.player.y > 700) {
-            this.handleFallDamage();
-        }
+ 
         
         // Comportamiento del jefe
         if (this.currentPhase === 2) {
