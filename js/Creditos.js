@@ -32,6 +32,19 @@ class Creditos extends Phaser.Scene {
             stroke: '#661b06'
         });
 
+        const text0 = `
+        Materia: Tecnologías Web
+        Fecha: 18 de marzo de 2025
+        `;
+        this.add.text(200, 70, text0, {
+            fontSize: '25px',
+            padding: { left: 5, right: 5, top: 5, bottom: 5 },
+            fontFamily: 'Mayan',
+            fill: '#d97f29',
+            strokeThickness: 5,
+            stroke: '#661b06'
+        });
+
         // Texto de créditos
         const text = `
         Desarrollado por:
@@ -39,8 +52,8 @@ class Creditos extends Phaser.Scene {
         - Saul Alvarez Gaspar
         - Carlos Franco Acosta
         `;
-        this.add.text(150, 150, text, {
-            fontSize: '32px',
+        this.add.text(200, 180, text, {
+            fontSize: '25px',
             padding: { left: 5, right: 5, top: 5, bottom: 5 },
             fontFamily: 'Mayan',
             fill: '#d97f29',
