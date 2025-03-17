@@ -87,6 +87,7 @@ class FinalLevel extends Phaser.Scene {
         this.playerBombs = this.physics.add.group();
         this.powerups = this.physics.add.group();
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        globalData.currentLevel = 3;
         
         // Configuración del escenario
         this.add.image(400, 330, 'xibalba_bg');
@@ -299,6 +300,22 @@ class FinalLevel extends Phaser.Scene {
 
     setupScore() {
         this.scoreText = this.add.text(16, 16, 'Score: ' + this.score, { 
+            fontSize: '32px',
+            fill: '#FFF',
+            fontFamily: 'Mayan'
+        });
+        this.aliasText = this.add.text(160, 16, 'Jugador: ' + globalData.alias, { 
+            fontSize: '32px',
+            fill: '#FFF',
+            fontFamily: 'Mayan'
+        });
+        this.fechaText = this.add.text(470, 16, 'Fecha: ' + globalData.registrado, { 
+            fontSize: '32px',
+            fill: '#FFF',
+            fontFamily: 'Mayan'
+        });
+        
+        this.nivelText = this.add.text(16, 100, 'Nivel: ' + globalData.currentLevel, { 
             fontSize: '32px',
             fill: '#FFF',
             fontFamily: 'Mayan'
