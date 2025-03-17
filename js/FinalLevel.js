@@ -38,7 +38,7 @@ class FinalLevel extends Phaser.Scene {
         this.load.image('xibalba_bg', 'assets/a.jpeg');
         this.load.image('ground', 'assets/piso2.png');
         this.load.image('ground2', 'assets/piso.webp');
-        this.load.image('bomb', 'assets/bola(1).png');
+        this.load.image('bomb', 'assets/Bfuego/bola(1).png');
         this.load.image('bomb_right', 'assets/Lanzad.png');
         this.load.image('powerup', 'assets/powerup.png');
         this.load.image('bomb_left', 'assets/Lanzai.png');
