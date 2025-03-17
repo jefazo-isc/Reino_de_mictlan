@@ -63,10 +63,10 @@ class FinalLevel extends Phaser.Scene {
     create() {
         // Configuración del personaje
         this.characterConfig = {
-            idleFrame: this.characterPrefix === 'p1' ? 'caminar1' : 'caminar13',
+            idleFrame: this.characterPrefix === 'p1' ? 'caminar1' : 'caminar24',
             walkFrames: {
-                left: this.characterPrefix === 'p1' ? { start: 13, end: 24 } : { start: 13, end: 24 },
-                right: this.characterPrefix === 'p1' ? { start: 1, end: 12 } : { start: 13, end: 24 }
+                left: this.characterPrefix === 'p1' ? { start: 1, end: 12 } : { start: 13, end: 24 },
+                right: this.characterPrefix === 'p1' ? { start: 13, end: 24 } : { start: 13, end: 24 }
             },
             jumpFrames: {
                 left: 'saltoi',
