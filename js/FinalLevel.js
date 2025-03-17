@@ -61,6 +61,8 @@ class FinalLevel extends Phaser.Scene {
     }
 
     create() {
+        this.bossHealth = 1000;  // Añadir esta línea
+
         // Configuración del personaje
         this.characterConfig = {
             idleFrame: this.characterPrefix === 'p1' ? 'caminar1' : 'caminar24',
@@ -126,7 +128,7 @@ class FinalLevel extends Phaser.Scene {
 
     setupPlatforms() {
         this.platforms = this.physics.add.staticGroup();
-        this.platforms.create(100, 595, 'ground').setScale(1).refreshBody();
+        this.platforms.create(100, 595, 'ground').setScale(3).refreshBody();
         
         this.movingPlatforms = this.physics.add.group({
             allowGravity: false,
@@ -325,7 +327,6 @@ class FinalLevel extends Phaser.Scene {
             if (!bomb.active || this.bossInvulnerable || !boss.active) return;
             
             this.damageBoss(50);
-            
             this.bossInvulnerable = true;
             this.time.delayedCall(500, () => {
                 if (this.scene.isActive()) this.bossInvulnerable = false;
@@ -570,10 +571,11 @@ class FinalLevel extends Phaser.Scene {
         powerup.destroy();
         this.isPowerUpActive = true;
         this.isInvincible = true;
-        
         player.setTint(0x00FF00);
         this.playerSpeed *= 1.5;
-        
+        this.score += 50;
+        this.scoreText.setText(`Score: ${this.score}`);
+        globalData.score = this.score;
         this.sound.play('power_up');
         this.powerUpTime = this.time.now + 10000;
     }
