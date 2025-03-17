@@ -218,7 +218,7 @@ class Puente extends Phaser.Scene {
         lanzaClavada.refreshBody();
         lanza.destroy();
 
-        this.time.delayedCall(1500, () => {
+        this.time.delayedCall(3000, () => {
             if (lanzaClavada?.active) lanzaClavada.destroy();
         });
     }
